@@ -94,14 +94,23 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // 获取该标签支持的NFC技术列表
-        String[] techList = tag.getTechList();
-
-        // 检查是否支持Mifare Classic或NFC F（Felica）技术
-        for (String tech : techList) {
+        for (String tech : tag.getTechList()) {
             if (tech.equals(NfcF.class.getName())) {
                 // NFC F (Felica) 卡片
                 cardType.setText("卡片类型: Felica");
+
+                NfcF nfcF = NfcF.get(tag);
+                byte[] idm = tag.getId();
+                byte[] pmm = nfcF.getManufacturer();
+                byte[] systemCode = nfcF.getSystemCode();
+
+                // 直接转换字节数据为十六进制字符串
+                String idmString = bytesToHex(idm);
+                String pmmString = bytesToHex(pmm);
+                String systemCodeString = bytesToHex(systemCode);
+
+                cardCode.setText("IDm: " + idmString + "\nPMm: " + pmmString + "\nSystemCode: " + systemCodeString);
+
                 return;
             } else if (tech.equals(MifareClassic.class.getName())) {
                 // Mifare Classic 卡片
@@ -109,5 +118,14 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
         }
+    }
+
+    // 将字节转换为十六进制字符串
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X", b));
+        }
+        return sb.toString();
     }
 }
