@@ -14,6 +14,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.nfcaimereader.connect.SpiceWebSocket;
+
 public class MainActivity extends AppCompatActivity {
     private TextView cardType, cardCode;
     private NfcAdapter nfcAdapter;
@@ -21,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private PendingIntent pendingIntent;
     private IntentFilter[] intentFiltersArray;
     private String[][] techListsArray;
+    private SpiceWebSocket spiceWebSocket;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
                     new String[]{"android.nfc.tech.MifareClassic"}
             };
         }
+
+        spiceWebSocket = new SpiceWebSocket();
     }
 
     @Override
@@ -111,6 +116,14 @@ public class MainActivity extends AppCompatActivity {
 
                 cardCode.setText("IDm: " + idmString + "\nPMm: " + pmmString + "\nSystemCode: " + systemCodeString);
 
+                // 构建WebSocket服务器的URI
+                String webSocketUri = "ws://192.168.1.134:11451";
+
+                // 在获取到IDm值后调用SpiceWebSocket连接WebSocket
+                if (idmString != null && !idmString.isEmpty()) {
+                    spiceWebSocket.connectWebSocket(webSocketUri, idmString);
+                }
+
                 return;
             } else if (tech.equals(MifareClassic.class.getName())) {
                 // Mifare Classic 卡片
@@ -127,5 +140,14 @@ public class MainActivity extends AppCompatActivity {
             sb.append(String.format("%02X", b));
         }
         return sb.toString();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // 关闭WebSocket连接
+        if (spiceWebSocket != null) {
+            spiceWebSocket.closeWebSocket();
+        }
     }
 }
