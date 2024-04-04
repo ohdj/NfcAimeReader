@@ -1,4 +1,4 @@
-package com.example.nfcaimereader.connect;
+package com.example.nfcaimereader.Connect;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;

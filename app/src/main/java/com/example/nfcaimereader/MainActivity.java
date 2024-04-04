@@ -14,15 +14,20 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.nfcaimereader.connect.SpiceWebSocket;
+import com.example.nfcaimereader.Connect.SpiceWebSocket;
+import com.example.nfcaimereader.Controllers.EditableHostnameAndPort;
 
 public class MainActivity extends AppCompatActivity {
-    private TextView cardType, cardCode;
-    private NfcAdapter nfcAdapter;
+    // UI控件相关
+    private TextView textview_cardType, textview_cardNumber;
 
+    // NFC相关
+    private NfcAdapter nfcAdapter;
     private PendingIntent pendingIntent;
     private IntentFilter[] intentFiltersArray;
     private String[][] techListsArray;
+
+    // WebSocket相关
     private SpiceWebSocket spiceWebSocket;
 
     @Override
@@ -30,8 +35,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        cardType = findViewById(R.id.cardType);
-        cardCode = findViewById(R.id.cardCode);
+        textview_cardType = findViewById(R.id.textview_cardType);
+        textview_cardNumber = findViewById(R.id.textview_cardNumber);
+
+        EditableHostnameAndPort editableHostnameAndPort = new EditableHostnameAndPort(this);
+        setContentView(editableHostnameAndPort);
 
         // 检查设备是否支持NFC
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
@@ -102,44 +110,39 @@ public class MainActivity extends AppCompatActivity {
         for (String tech : tag.getTechList()) {
             if (tech.equals(NfcF.class.getName())) {
                 // NFC F (Felica) 卡片
-                cardType.setText("卡片类型: Felica");
+                textview_cardType.setText("卡片类型: Felica");
 
-                NfcF nfcF = NfcF.get(tag);
+                // 得到Felica卡IDm值后，将字节数据转换为十六进制字符串
                 byte[] idm = tag.getId();
-                byte[] pmm = nfcF.getManufacturer();
-                byte[] systemCode = nfcF.getSystemCode();
-
-                // 直接转换字节数据为十六进制字符串
-                String idmString = bytesToHex(idm);
-                String pmmString = bytesToHex(pmm);
-                String systemCodeString = bytesToHex(systemCode);
-
-                cardCode.setText("IDm: " + idmString + "\nPMm: " + pmmString + "\nSystemCode: " + systemCodeString);
-
-                // 构建WebSocket服务器的URI
-                String webSocketUri = "ws://192.168.1.134:11451";
-
-                // 在获取到IDm值后调用SpiceWebSocket连接WebSocket
-                if (idmString != null && !idmString.isEmpty()) {
-                    spiceWebSocket.connectWebSocket(webSocketUri, idmString);
+                StringBuilder sb = new StringBuilder();
+                for (byte b : idm) {
+                    sb.append(String.format("%02X", b));
                 }
+                String idmString = sb.toString();
+
+                // 设置UI上显示的卡号
+                textview_cardNumber.setText("Card Number：" + idmString);
+
+//                if (edittext_hostname.getText().toString().isEmpty() || edittext_port.getText().toString().isEmpty()) {
+//                    Toast.makeText(this, "请填写HostName以及Port", Toast.LENGTH_LONG).show();
+//                    return;
+//                }
+//
+//                // 构建WebSocket服务器的URI
+//                String webSocketUri = edittext_hostname + ":" + edittext_port;
+//
+//                // 在获取到IDm值后调用SpiceWebSocket连接WebSocket
+//                if (!idmString.isEmpty()) {
+//                    spiceWebSocket.connectWebSocket(webSocketUri, idmString);
+//                }
 
                 return;
             } else if (tech.equals(MifareClassic.class.getName())) {
                 // Mifare Classic 卡片
-                cardType.setText("卡片类型: Mifare");
+                textview_cardType.setText("卡片类型: Mifare");
                 return;
             }
         }
-    }
-
-    // 将字节转换为十六进制字符串
-    private String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02X", b));
-        }
-        return sb.toString();
     }
 
     @Override

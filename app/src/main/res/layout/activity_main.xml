@@ -3,23 +3,39 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <EditText
+        android:id="@+id/edittext_hostname"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="Hostname"
+        android:inputType="text" />
+
+    <EditText
+        android:id="@+id/edittext_port"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="Port"
+        android:inputType="number" />
 
     <Button
-        android:id="@+id/nfc_start"
+        android:id="@+id/button_serverEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="click me" />
+        android:layout_below="@id/edittext_port"
+        android:visibility="gone" />
 
     <TextView
-        android:id="@+id/cardType"
+        android:id="@+id/textview_cardType"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="卡片类型" />
 
     <TextView
-        android:id="@+id/cardCode"
+        android:id="@+id/textview_cardNumber"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="ACCESS CODE" />
+        android:text="Card Number" />
 </LinearLayout>
