@@ -46,24 +46,23 @@ public class EditableHostnameAndPort extends LinearLayout {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                boolean hostnameNotEmpty = !editTextHostname.getText().toString().isEmpty();
-                boolean portNotEmpty = !editTextPort.getText().toString().isEmpty();
+                boolean hostnameIsEmpty = editTextHostname.getText().toString().isEmpty();
+                boolean portIsEmpty = editTextPort.getText().toString().isEmpty();
 
-                if (hostnameNotEmpty || portNotEmpty) {
-                    buttonControlEditText.setVisibility(View.VISIBLE);
-                    buttonControlEditText.setText("保存");
-                    buttonControlEditText.setEnabled(true);
-                } else {
+                if (hostnameIsEmpty || portIsEmpty) {
+                    buttonControlEditText.setEnabled(false);
                     buttonControlEditText.setVisibility(View.GONE);
+                    return;
+                } else {
+                    buttonControlEditText.setText("保存");
+                    buttonControlEditText.setVisibility(View.VISIBLE);
                 }
 
-                if (!editTextPort.getText().toString().equals("")) {
+                if (editTextPort.getText().toString().matches("^[0-9]{1,5}$")) {
                     int port = Integer.parseInt(editTextPort.getText().toString());
-                    if (port >= 0 && port <= 65535) {
-                        buttonControlEditText.setEnabled(true);
-                    } else {
-                        buttonControlEditText.setEnabled(false);
-                    }
+                    buttonControlEditText.setEnabled(port >= 0 && port <= 65535);
+                } else {
+                    buttonControlEditText.setEnabled(false);
                 }
             }
 
