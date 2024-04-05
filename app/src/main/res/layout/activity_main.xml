@@ -25,7 +25,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/edittext_port"
-        android:visibility="gone" />
+        android:enabled="false"
+        android:text="保存" />
+
+    <TextView
+        android:id="@+id/textview_serverAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="服务器地址" />
 
     <TextView
         android:id="@+id/textview_cardType"

@@ -1,10 +1,10 @@
 package com.example.nfcaimereader.Controllers;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -28,6 +28,8 @@ public class EditableHostnameAndPort extends LinearLayout {
         buttonControlEditText = findViewById(R.id.button_serverEdit);
 
         setListeners();
+
+        loadHostnameAndPort();
     }
 
     private void setListeners() {
@@ -51,19 +53,31 @@ public class EditableHostnameAndPort extends LinearLayout {
 
                 if (hostnameIsEmpty || portIsEmpty) {
                     buttonControlEditText.setEnabled(false);
-                    buttonControlEditText.setVisibility(View.GONE);
                     return;
-                } else {
-                    buttonControlEditText.setText("保存");
-                    buttonControlEditText.setVisibility(View.VISIBLE);
                 }
 
-                if (editTextPort.getText().toString().matches("^[0-9]{1,5}$")) {
-                    int port = Integer.parseInt(editTextPort.getText().toString());
-                    buttonControlEditText.setEnabled(port >= 0 && port <= 65535);
-                } else {
-                    buttonControlEditText.setEnabled(false);
-                }
+            /*
+                ^
+                (
+                    (?!0)[0-9]{1,4}    # 匹配1到9999之间的任意数字且首位不能为0；其中{1,4}表示长度为1到4的数字串
+                |
+                    [1-5][0-9]{4}      # 匹配10000到59999之间的数字；首位为1-5，其余为0-9的四位数
+                |
+                    6[0-4][0-9]{3}     # 匹配60000到64999之间的数字；首位为6，第二位为0-4，后跟任意三位数字
+                |
+                    65[0-4][0-9]{2}    # 匹配65000到65499之间的数字；前两位为65，第三位为0-4，后跟任意两位数字
+                |
+                    655[0-2][0-9]      # 匹配65500到65529之间的数字；前三位为655，第四位为0-2，后跟任意一位数字
+                |
+                    6553[0-5]          # 匹配65530到65535之间的数字；前四位为6553，最后一位为0-5之间的数字
+                )
+                $
+            */
+                // 匹配从0到65535之间的数字，用于验证端口号
+                final String PORT_PATTERN = "^((?!0)[0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$";
+
+                String portString = editTextPort.getText().toString();
+                buttonControlEditText.setEnabled(portString.matches(PORT_PATTERN));
             }
 
             @Override
@@ -80,25 +94,47 @@ public class EditableHostnameAndPort extends LinearLayout {
                 editTextPort.setEnabled(true);
                 buttonControlEditText.setText("保存");
                 break;
-            case "取消":
-                editTextHostname.setText("");
-                editTextPort.setText("");
-                buttonControlEditText.setVisibility(View.GONE);
-                break;
             case "保存":
-                try {
-                    saveHostnameAndPort();
-                    editTextHostname.setEnabled(false);
-                    editTextPort.setEnabled(false);
-                    buttonControlEditText.setText("编辑");
-                    Toast.makeText(getContext(), "已保存", Toast.LENGTH_SHORT).show();
-                } catch (NumberFormatException e) {
-                    Toast.makeText(getContext(), "端口号无效", Toast.LENGTH_SHORT).show();
-                }
+                editTextHostname.setEnabled(false);
+                editTextPort.setEnabled(false);
+                buttonControlEditText.setText("编辑");
+
+                // 永久化保存hostname和port
+                String hostnameString = editTextHostname.getText().toString();
+                String portString = editTextPort.getText().toString();
+                saveHostnameAndPort(hostnameString, portString);
+
                 break;
         }
     }
 
-    private void saveHostnameAndPort() {
+    private void loadHostnameAndPort() {
+        SharedPreferences sharedPref = getContext().getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+        String hostname = sharedPref.getString("hostname", "");
+        String port = sharedPref.getString("port", "");
+
+        editTextHostname.setText(hostname);
+        editTextPort.setText(port);
+
+        // 判断 SharedPreferences 中是否有保存的值
+        boolean hasSavedValues = !hostname.isEmpty() && !port.isEmpty();
+        buttonControlEditText.setEnabled(hasSavedValues); // 如果有保存的值则启用按钮
+
+        // 如果有保存的值，设置按钮文本为“编辑”，否则保持为“保存”
+        if (hasSavedValues) {
+            editTextHostname.setEnabled(false);
+            editTextPort.setEnabled(false);
+            buttonControlEditText.setText("编辑");
+            Toast.makeText(getContext(), "已读取之前保存的服务器", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void saveHostnameAndPort(String ip, String port) {
+        SharedPreferences sharedPref = getContext().getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString("hostname", ip);
+        editor.putString("port", port);
+        editor.apply();
+        Toast.makeText(getContext(), "已保存", Toast.LENGTH_SHORT).show();
     }
 }
