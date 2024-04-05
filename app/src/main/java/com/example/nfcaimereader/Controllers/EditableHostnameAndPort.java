@@ -4,28 +4,20 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.LayoutInflater;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.example.nfcaimereader.R;
+public class EditableHostnameAndPort {
+    private final Context context;
+    private final EditText editTextHostname, editTextPort;
+    private final Button buttonControlEditText;
 
-public class EditableHostnameAndPort extends LinearLayout {
-
-    private EditText editTextHostname;
-    private EditText editTextPort;
-    private Button buttonControlEditText;
-
-    public EditableHostnameAndPort(Context context) {
-        super(context);
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        inflater.inflate(R.layout.activity_main, this, true);
-
-        editTextHostname = findViewById(R.id.edittext_hostname);
-        editTextPort = findViewById(R.id.edittext_port);
-        buttonControlEditText = findViewById(R.id.button_serverEdit);
+    public EditableHostnameAndPort(Context context, EditText editTextHostname, EditText editTextPort, Button buttonControlEditText) {
+        this.context = context;
+        this.editTextHostname = editTextHostname;
+        this.editTextPort = editTextPort;
+        this.buttonControlEditText = buttonControlEditText;
 
         setListeners();
 
@@ -109,7 +101,7 @@ public class EditableHostnameAndPort extends LinearLayout {
     }
 
     private void loadHostnameAndPort() {
-        SharedPreferences sharedPref = getContext().getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = context.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
         String hostname = sharedPref.getString("hostname", "");
         String port = sharedPref.getString("port", "");
 
@@ -125,16 +117,16 @@ public class EditableHostnameAndPort extends LinearLayout {
             editTextHostname.setEnabled(false);
             editTextPort.setEnabled(false);
             buttonControlEditText.setText("编辑");
-            Toast.makeText(getContext(), "已读取之前保存的服务器", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "已读取之前保存的服务器", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void saveHostnameAndPort(String ip, String port) {
-        SharedPreferences sharedPref = getContext().getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = context.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString("hostname", ip);
         editor.putString("port", port);
         editor.apply();
-        Toast.makeText(getContext(), "已保存", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "已保存", Toast.LENGTH_SHORT).show();
     }
 }

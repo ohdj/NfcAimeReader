@@ -9,6 +9,8 @@ import android.nfc.tech.MifareClassic;
 import android.nfc.tech.NfcF;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,7 +20,6 @@ import com.example.nfcaimereader.Connect.SpiceWebSocket;
 import com.example.nfcaimereader.Controllers.EditableHostnameAndPort;
 
 public class MainActivity extends AppCompatActivity {
-    // UI控件相关
     private TextView textview_cardType, textview_cardNumber;
 
     // NFC相关
@@ -35,11 +36,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // EditableHostnameAndPort类相关
+        EditText editTextHostname = findViewById(R.id.edittext_hostname);
+        EditText editTextPort = findViewById(R.id.edittext_port);
+        Button buttonControlEditText = findViewById(R.id.button_serverEdit);
+        new EditableHostnameAndPort(this, editTextHostname, editTextPort, buttonControlEditText);
+
+        // 卡片类型、卡号
         textview_cardType = findViewById(R.id.textview_cardType);
         textview_cardNumber = findViewById(R.id.textview_cardNumber);
-
-        EditableHostnameAndPort editableHostnameAndPort = new EditableHostnameAndPort(this);
-        setContentView(editableHostnameAndPort);
 
         // 检查设备是否支持NFC
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
@@ -121,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 String idmString = sb.toString();
 
                 // 设置UI上显示的卡号
-                textview_cardNumber.setText("Card Number：" + idmString);
+                textview_cardNumber.setText("卡号：" + idmString);
 
 //                if (edittext_hostname.getText().toString().isEmpty() || edittext_port.getText().toString().isEmpty()) {
 //                    Toast.makeText(this, "请填写HostName以及Port", Toast.LENGTH_LONG).show();

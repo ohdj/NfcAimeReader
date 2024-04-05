@@ -11,6 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:hint="Hostname"
+        android:importantForAutofill="no"
         android:inputType="text" />
 
     <EditText
@@ -18,13 +19,13 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:hint="Port"
+        android:importantForAutofill="no"
         android:inputType="number" />
 
     <Button
         android:id="@+id/button_serverEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/edittext_port"
         android:enabled="false"
         android:text="保存" />
 
@@ -44,5 +45,5 @@
         android:id="@+id/textview_cardNumber"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Card Number" />
+        android:text="卡号" />
 </LinearLayout>
