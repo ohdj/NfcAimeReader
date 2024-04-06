@@ -1,5 +1,6 @@
 package com.example.nfcaimereader.Controllers;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.Editable;
@@ -8,16 +9,21 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.nfcaimereader.R;
+
 public class EditableHostnameAndPort {
     private final Context context;
-    private final EditText editTextHostname, editTextPort;
-    private final Button buttonControlEditText;
 
-    public EditableHostnameAndPort(Context context, EditText editTextHostname, EditText editTextPort, Button buttonControlEditText) {
+    private EditText editTextHostname;
+    private EditText editTextPort;
+    private Button buttonControlEditText;
+
+    public EditableHostnameAndPort(Context context) {
         this.context = context;
-        this.editTextHostname = editTextHostname;
-        this.editTextPort = editTextPort;
-        this.buttonControlEditText = buttonControlEditText;
+
+        editTextHostname = ((Activity) context).findViewById(R.id.edittext_hostname);
+        editTextPort = ((Activity) context).findViewById(R.id.edittext_port);
+        buttonControlEditText = ((Activity) context).findViewById(R.id.button_serverEdit);
 
         setListeners();
 

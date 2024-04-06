@@ -31,7 +31,7 @@ while (accessCode.length() < 20) {
 
 felica.txt (IDm) 和 ACCESS CODE 的转换是 Allnet 服务器实现的，而官机返回卡背面 access code 大概率是 sega 从 AIC 的发卡记录查表得出，私服是没有能力获取卡片 ACCESS CODE 的
 
-所以如果你扫描了一张较新的基于 AIC 的 Aime（Felica 类型），它的 FeliCa IDm 将被提供给游戏。游戏内无法看到正确的"ACCESS CODE"，但 IDm 是每张卡独有的，这样仍然可以追踪你的游戏记录
+所以如果你扫描了一张较新的基于 AIC 的 Aime（Felica 类型），它的 Felica IDm 将被提供给游戏。游戏内无法看到正确的"ACCESS CODE"，但 IDm 是每张卡独有的，这样仍然可以追踪你的游戏记录
 
 参考链接：[关于Aime与felica卡号转换的问题 - BEMANICN](https://bemani.cc/d/107-aimefelica/2)
 
