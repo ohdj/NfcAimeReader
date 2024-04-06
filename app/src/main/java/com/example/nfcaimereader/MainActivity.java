@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
         uiUpdater = new UiUpdaterManager(this);
 
-        new EditableHostnameAndPort(this);
+        new EditableHostnameAndPort(this, uiUpdater);
 
         // 检查设备是否支持NFC
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);

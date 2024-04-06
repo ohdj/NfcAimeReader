@@ -5,25 +5,30 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.nfcaimereader.Drawables.UiUpdater;
+import com.example.nfcaimereader.Drawables.UiUpdaterManager;
 import com.example.nfcaimereader.R;
 
 public class EditableHostnameAndPort {
     private final Context context;
+    private final UiUpdater uiUpdater;
 
-    private EditText editTextHostname;
-    private EditText editTextPort;
-    private Button buttonControlEditText;
+    private final EditText editTextHostname;
+    private final EditText editTextPort;
+    private final Button buttonControlEditText;
 
-    public EditableHostnameAndPort(Context context) {
+    public EditableHostnameAndPort(Context context, UiUpdater uiUpdater) {
         this.context = context;
+        this.uiUpdater = uiUpdater;
 
         editTextHostname = ((Activity) context).findViewById(R.id.edittext_hostname);
         editTextPort = ((Activity) context).findViewById(R.id.edittext_port);
-        buttonControlEditText = ((Activity) context).findViewById(R.id.button_serverEdit);
+        buttonControlEditText = ((Activity) context).findViewById(R.id.button_ControlEditText);
 
         setListeners();
 
@@ -35,7 +40,7 @@ public class EditableHostnameAndPort {
         editTextHostname.addTextChangedListener(textWatcher);
         editTextPort.addTextChangedListener(textWatcher);
 
-        buttonControlEditText.setOnClickListener(view -> handleButtonClick());
+        uiUpdater.setOnClickListener(R.id.button_ControlEditText, v -> handleButtonClick());
     }
 
     private TextWatcher createTextWatcher() {
