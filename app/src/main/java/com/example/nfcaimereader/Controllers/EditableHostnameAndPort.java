@@ -5,30 +5,26 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.nfcaimereader.Drawables.UiUpdater;
-import com.example.nfcaimereader.Drawables.UiUpdaterManager;
 import com.example.nfcaimereader.R;
 
 public class EditableHostnameAndPort {
-    private final Context context;
-    private final UiUpdater uiUpdater;
+    private final Activity activity;
 
     private final EditText editTextHostname;
     private final EditText editTextPort;
     private final Button buttonControlEditText;
 
-    public EditableHostnameAndPort(Context context, UiUpdater uiUpdater) {
-        this.context = context;
-        this.uiUpdater = uiUpdater;
+    public EditableHostnameAndPort(Activity activity) {
+        this.activity = activity;
 
-        editTextHostname = ((Activity) context).findViewById(R.id.edittext_hostname);
-        editTextPort = ((Activity) context).findViewById(R.id.edittext_port);
-        buttonControlEditText = ((Activity) context).findViewById(R.id.button_ControlEditText);
+        // UI
+        editTextHostname = activity.findViewById(R.id.edittext_hostname);
+        editTextPort = activity.findViewById(R.id.edittext_port);
+        buttonControlEditText = activity.findViewById(R.id.button_ControlEditText);
 
         setListeners();
 
@@ -40,7 +36,7 @@ public class EditableHostnameAndPort {
         editTextHostname.addTextChangedListener(textWatcher);
         editTextPort.addTextChangedListener(textWatcher);
 
-        uiUpdater.setOnClickListener(R.id.button_ControlEditText, v -> handleButtonClick());
+        buttonControlEditText.setOnClickListener(v -> handleButtonClick());
     }
 
     private TextWatcher createTextWatcher() {
@@ -112,7 +108,7 @@ public class EditableHostnameAndPort {
     }
 
     private void loadHostnameAndPort() {
-        SharedPreferences sharedPref = context.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = activity.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
         String hostname = sharedPref.getString("hostname", "");
         String port = sharedPref.getString("port", "");
 
@@ -128,16 +124,16 @@ public class EditableHostnameAndPort {
             editTextHostname.setEnabled(false);
             editTextPort.setEnabled(false);
             buttonControlEditText.setText("编辑");
-            Toast.makeText(context, "已读取之前保存的服务器", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "已读取之前保存的服务器", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void saveHostnameAndPort(String ip, String port) {
-        SharedPreferences sharedPref = context.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = activity.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString("hostname", ip);
         editor.putString("port", port);
         editor.apply();
-        Toast.makeText(context, "已保存", Toast.LENGTH_SHORT).show();
+        Toast.makeText(activity, "已保存", Toast.LENGTH_SHORT).show();
     }
 }

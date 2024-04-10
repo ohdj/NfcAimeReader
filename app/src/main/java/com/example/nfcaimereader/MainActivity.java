@@ -9,25 +9,26 @@ import android.nfc.tech.MifareClassic;
 import android.nfc.tech.NfcF;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.nfcaimereader.Connect.SpiceWebSocket;
 import com.example.nfcaimereader.Controllers.EditableHostnameAndPort;
-import com.example.nfcaimereader.Drawables.UiUpdater;
-import com.example.nfcaimereader.Drawables.UiUpdaterManager;
 
 public class MainActivity extends AppCompatActivity {
-    private UiUpdater uiUpdater;
+    // UI
+    private TextView textViewCardType;
+    private TextView textViewCardNumber;
 
-    // NFC相关
+    // NFC
     private NfcAdapter nfcAdapter;
     private PendingIntent pendingIntent;
     private IntentFilter[] intentFiltersArray;
     private String[][] techListsArray;
 
-    // WebSocket相关
+    // WebSocket
     private SpiceWebSocket spiceWebSocket;
 
     @Override
@@ -35,9 +36,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        uiUpdater = new UiUpdaterManager(this);
+        // UI
+        textViewCardType = findViewById(R.id.textview_cardType);
+        textViewCardNumber = findViewById(R.id.textview_cardNumber);
 
-        new EditableHostnameAndPort(this, uiUpdater);
+        // 编辑服务器
+        new EditableHostnameAndPort(this);
 
         // 检查设备是否支持NFC
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
@@ -108,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
         for (String tech : tag.getTechList()) {
             if (tech.equals(NfcF.class.getName())) {
                 // NFC F (Felica) 卡片
-                uiUpdater.setCardType("卡片类型: Felica");
+                textViewCardType.setText("卡片类型: Felica");
 
                 // 得到Felica卡IDm值后，将字节数据转换为十六进制字符串
                 byte[] idm = tag.getId();
@@ -119,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
                 String idmString = sb.toString();
 
                 // 设置UI上显示的卡号
-                uiUpdater.setCardNumber("卡号：" + idmString);
+                textViewCardNumber.setText("卡号：" + idmString);
 
 //                if (edittext_hostname.getText().toString().isEmpty() || edittext_port.getText().toString().isEmpty()) {
 //                    Toast.makeText(this, "请填写HostName以及Port", Toast.LENGTH_LONG).show();
@@ -137,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             } else if (tech.equals(MifareClassic.class.getName())) {
                 // Mifare Classic 卡片
-                uiUpdater.setCardType("卡片类型: Mifare");
+                textViewCardType.setText("卡片类型: Mifare");
                 return;
             }
         }
