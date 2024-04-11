@@ -84,8 +84,11 @@ public class NfcHandler {
 
                 break;
             } else if (tech.equals(MifareClassic.class.getName())) {
-                // 处理MifareClassic类型的卡片
+                // 处理Mifare Classic类型的卡片
                 cardType.append("卡片类型: Mifare Classic");
+
+                byte[] tagId = tag.getId();
+                cardNumber.append("卡号: ").append(bytesToHex(tagId));
 
                 break;
             }
