@@ -24,7 +24,7 @@ public class EditableHostnameAndPort {
         // UI
         editTextHostname = activity.findViewById(R.id.edittext_hostname);
         editTextPort = activity.findViewById(R.id.edittext_port);
-        buttonControlEditText = activity.findViewById(R.id.button_ControlEditText);
+        buttonControlEditText = activity.findViewById(R.id.button_control_edit_text);
 
         setListeners();
 

@@ -23,27 +23,27 @@
         android:inputType="number" />
 
     <Button
-        android:id="@+id/button_ControlEditText"
+        android:id="@+id/button_control_edit_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:enabled="false"
         android:text="保存" />
 
     <TextView
-        android:id="@+id/textview_serverAddress"
+        android:id="@+id/textview_server_address"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="服务器地址" />
 
     <TextView
-        android:id="@+id/textview_cardType"
+        android:id="@+id/textview_card_type"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="卡片类型" />
 
     <TextView
-        android:id="@+id/textview_cardNumber"
+        android:id="@+id/textview_card_number"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="卡号" />
+        android:text="卡片号码" />
 </LinearLayout>
