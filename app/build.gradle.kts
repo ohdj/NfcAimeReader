@@ -30,7 +30,7 @@ android {
 
 dependencies {
 
-    implementation("org.java-websocket:Java-WebSocket:1.5.1")
+    implementation("org.java-websocket:Java-WebSocket:1.5.6")
     implementation("org.slf4j:slf4j-api:1.7.30")
     implementation("org.slf4j:slf4j-simple:1.6.1")
     implementation("androidx.appcompat:appcompat:1.6.1")

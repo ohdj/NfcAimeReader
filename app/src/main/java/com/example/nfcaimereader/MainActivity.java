@@ -3,6 +3,7 @@ package com.example.nfcaimereader;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -52,13 +53,17 @@ public class MainActivity extends AppCompatActivity implements NfcTagListener {
     @Override
     protected void onResume() {
         super.onResume();
-        nfcHandler.enableForegroundDispatch();
+        if (nfcHandler != null) {
+            nfcHandler.enableForegroundDispatch();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        nfcHandler.disableForegroundDispatch();
+        if (nfcHandler != null) {
+            nfcHandler.disableForegroundDispatch();
+        }
     }
 
     @Override

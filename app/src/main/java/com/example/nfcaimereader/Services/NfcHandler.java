@@ -18,7 +18,7 @@ public class NfcHandler {
     private final NfcTagListener listener;
 
     // NFC
-    private final NfcAdapter nfcAdapter;
+    private NfcAdapter nfcAdapter;
     private PendingIntent pendingIntent;
     private IntentFilter[] intentFiltersArray;
     private String[][] techListsArray;
@@ -27,32 +27,41 @@ public class NfcHandler {
         this.activity = activity;
         this.listener = listener;
 
+        initializeNFC();
+    }
+
+    public void initializeNFC() {
         // 检查设备是否支持NFC
         nfcAdapter = NfcAdapter.getDefaultAdapter(activity);
         if (nfcAdapter == null) {
-            // 停用NFC功能，因为设备不支持
-            Toast.makeText(activity, "NFC不可用", Toast.LENGTH_LONG).show();
+            // NFC不可用
+            Toast.makeText(activity, "NFC不可用，或是设备不支持NFC", Toast.LENGTH_LONG).show();
             activity.finish();
-        } else if (!nfcAdapter.isEnabled()) {
+            return;
+        }
+
+        setupForegroundDispatchSystem();
+
+        if (!nfcAdapter.isEnabled()) {
             // 提示用户在设置中启用NFC
             Toast.makeText(activity, "请在设置中启用NFC功能", Toast.LENGTH_LONG).show();
-
-            // 跳转到设置页面
             activity.startActivity(new Intent(Settings.ACTION_NFC_SETTINGS));
-        } else {
-            pendingIntent = PendingIntent.getActivity(
-                    activity, 0, new Intent(activity, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
-                    PendingIntent.FLAG_MUTABLE
-            );
-
-            IntentFilter tech = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
-
-            intentFiltersArray = new IntentFilter[]{tech};
-            techListsArray = new String[][]{
-                    new String[]{"android.nfc.tech.NfcF"},
-                    new String[]{"android.nfc.tech.MifareClassic"}
-            };
         }
+    }
+
+    private void setupForegroundDispatchSystem() {
+        pendingIntent = PendingIntent.getActivity(
+                activity, 0, new Intent(activity, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                PendingIntent.FLAG_MUTABLE
+        );
+
+        IntentFilter tech = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
+
+        intentFiltersArray = new IntentFilter[]{tech};
+        techListsArray = new String[][]{
+                new String[]{"android.nfc.tech.NfcF"},
+                new String[]{"android.nfc.tech.MifareClassic"}
+        };
     }
 
     public void handleIntent(Intent intent) {
