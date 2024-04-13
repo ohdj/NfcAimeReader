@@ -9,13 +9,17 @@ import android.nfc.Tag;
 import android.nfc.tech.MifareClassic;
 import android.nfc.tech.NfcF;
 import android.provider.Settings;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.nfcaimereader.MainActivity;
+import com.example.nfcaimereader.R;
 
 public class NfcHandler {
     private final Activity activity;
-    private final NfcTagListener listener;
+
+    // UI
+    private final TextView textViewCardType, textViewCardNumber;
 
     // NFC
     private NfcAdapter nfcAdapter;
@@ -23,9 +27,12 @@ public class NfcHandler {
     private IntentFilter[] intentFiltersArray;
     private String[][] techListsArray;
 
-    public NfcHandler(Activity activity, NfcTagListener listener) {
+    public NfcHandler(Activity activity) {
         this.activity = activity;
-        this.listener = listener;
+
+        // UI
+        textViewCardType = activity.findViewById(R.id.textview_card_type);
+        textViewCardNumber = activity.findViewById(R.id.textview_card_number);
 
         initializeNFC();
     }
@@ -103,7 +110,8 @@ public class NfcHandler {
             }
         }
 
-        listener.onTagDetected(cardType.toString(), cardNumber.toString());
+        textViewCardType.setText(cardType);
+        textViewCardNumber.setText(cardNumber);
     }
 
     // 将字节数组转换为十六进制字符串
