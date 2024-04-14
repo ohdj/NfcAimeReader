@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         if (nfcHandler != null) {
             nfcHandler.enableForegroundDispatch();
+            nfcHandler.updateNfcStatus();  // 更新NFC状态显示
         }
     }
 

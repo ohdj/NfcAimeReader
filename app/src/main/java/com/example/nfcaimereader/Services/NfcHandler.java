@@ -19,7 +19,7 @@ public class NfcHandler {
     private final Activity activity;
 
     // UI
-    private final TextView textViewCardType, textViewCardNumber;
+    private final TextView textviewNfcStatus, textViewCardType, textViewCardNumber;
 
     // NFC
     private NfcAdapter nfcAdapter;
@@ -31,6 +31,7 @@ public class NfcHandler {
         this.activity = activity;
 
         // UI
+        textviewNfcStatus = activity.findViewById(R.id.textview_nfc_status);
         textViewCardType = activity.findViewById(R.id.textview_card_type);
         textViewCardNumber = activity.findViewById(R.id.textview_card_number);
 
@@ -132,6 +133,18 @@ public class NfcHandler {
     public void disableForegroundDispatch() {
         if (nfcAdapter != null) {
             nfcAdapter.disableForegroundDispatch(activity);
+        }
+    }
+
+    public void updateNfcStatus() {
+        if (nfcAdapter != null) {
+            if (nfcAdapter.isEnabled()) {
+                textviewNfcStatus.setText("NFC已启用");
+            } else {
+                textviewNfcStatus.setText("NFC已禁用");
+            }
+        } else {
+            textviewNfcStatus.setText("此设备不支持NFC");
         }
     }
 }
