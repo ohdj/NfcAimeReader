@@ -131,6 +131,8 @@ public class NfcHandler {
         }
     }
 
+    private CountDownTimer countDownTimer;
+
     public void checkNfcStatus() {
         // NFC不可用
         if (nfcAdapter == null) return;
@@ -145,7 +147,11 @@ public class NfcHandler {
 
         progressBarNfcDelay.setVisibility(View.VISIBLE);
 
-        new CountDownTimer(3000, 1000) {
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
+
+        countDownTimer = new CountDownTimer(3000, 1000) {
             public void onTick(long millisUntilFinished) {
                 // 更新文本视图的倒计时
                 int secondsLeft = (int) (millisUntilFinished / 1000) + 1;
