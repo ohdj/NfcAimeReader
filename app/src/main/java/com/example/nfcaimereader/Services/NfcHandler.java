@@ -8,9 +8,11 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.MifareClassic;
 import android.nfc.tech.NfcF;
+import android.os.CountDownTimer;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,6 +24,7 @@ public class NfcHandler {
 
     // UI
     private final TextView textviewNfcStatus, textViewCardType, textViewCardNumber;
+    private final ProgressBar progressBarNfcDelay;
     private final Button buttonNfcSetting;
 
     // NFC
@@ -37,6 +40,7 @@ public class NfcHandler {
         textviewNfcStatus = activity.findViewById(R.id.textview_nfc_status);
         textViewCardType = activity.findViewById(R.id.textview_card_type);
         textViewCardNumber = activity.findViewById(R.id.textview_card_number);
+        progressBarNfcDelay = activity.findViewById(R.id.progressBar_nfc_delay);
         buttonNfcSetting = activity.findViewById(R.id.button_nfc_setting);
 
         // 检查设备是否支持NFC
@@ -125,6 +129,25 @@ public class NfcHandler {
         if (nfcAdapter != null) {
             nfcAdapter.disableForegroundDispatch(activity);
         }
+    }
+
+    public void checkNfcStatus() {
+        progressBarNfcDelay.setVisibility(View.VISIBLE);
+        buttonNfcSetting.setVisibility(View.GONE);
+
+        new CountDownTimer(3000, 1000) {
+            public void onTick(long millisUntilFinished) {
+                // 更新文本视图的倒计时
+                int secondsLeft = (int) (millisUntilFinished / 1000) + 1;
+                textviewNfcStatus.setText("NFC状态检测中..." + secondsLeft);
+            }
+
+            public void onFinish() {
+                // 隐藏进度条
+                progressBarNfcDelay.setVisibility(View.GONE);
+                updateNfcStatus();
+            }
+        }.start();
     }
 
     public void updateNfcStatus() {
