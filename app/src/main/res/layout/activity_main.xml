@@ -50,13 +50,14 @@
             android:id="@+id/textview_nfc_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="NFC状态检测中..." />
+            android:text="此设备不支持NFC" />
 
         <ProgressBar
             android:id="@+id/progressBar_nfc_delay"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:indeterminate="true" />
+            android:indeterminate="true"
+            android:visibility="gone" />
     </LinearLayout>
 
     <Button
