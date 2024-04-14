@@ -2,6 +2,11 @@ package com.example.nfcaimereader;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -37,9 +42,30 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        TextView textviewNfcStatus = findViewById(R.id.textview_nfc_status);
+        ProgressBar progressBarNfcDelay = findViewById(R.id.progressBar_nfc_delay);
+        Button buttonNfcSetting = findViewById(R.id.button_nfc_setting);
+
+        progressBarNfcDelay.setVisibility(View.VISIBLE);
+        buttonNfcSetting.setVisibility(View.GONE);
+
         if (nfcHandler != null) {
             nfcHandler.enableForegroundDispatch();
-            nfcHandler.updateNfcStatus();  // 更新NFC状态显示
+
+            new CountDownTimer(3000, 1000) {
+                public void onTick(long millisUntilFinished) {
+                    int secondsLeft = (int) (millisUntilFinished / 1000) + 1;
+                    // 更新文本视图的倒计时
+                    textviewNfcStatus.setText("NFC状态检测中..." + secondsLeft);
+                }
+
+                public void onFinish() {
+                    // 隐藏进度条
+                    progressBarNfcDelay.setVisibility(View.GONE);
+                    nfcHandler.updateNfcStatus();
+                }
+            }.start();
         }
     }
 

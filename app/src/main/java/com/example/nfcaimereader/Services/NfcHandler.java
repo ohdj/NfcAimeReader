@@ -9,6 +9,8 @@ import android.nfc.Tag;
 import android.nfc.tech.MifareClassic;
 import android.nfc.tech.NfcF;
 import android.provider.Settings;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,9 +22,10 @@ public class NfcHandler {
 
     // UI
     private final TextView textviewNfcStatus, textViewCardType, textViewCardNumber;
+    private final Button buttonNfcSetting;
 
     // NFC
-    private NfcAdapter nfcAdapter;
+    private final NfcAdapter nfcAdapter;
     private PendingIntent pendingIntent;
     private IntentFilter[] intentFiltersArray;
     private String[][] techListsArray;
@@ -34,27 +37,15 @@ public class NfcHandler {
         textviewNfcStatus = activity.findViewById(R.id.textview_nfc_status);
         textViewCardType = activity.findViewById(R.id.textview_card_type);
         textViewCardNumber = activity.findViewById(R.id.textview_card_number);
+        buttonNfcSetting = activity.findViewById(R.id.button_nfc_setting);
 
-        initializeNFC();
-    }
-
-    public void initializeNFC() {
         // 检查设备是否支持NFC
         nfcAdapter = NfcAdapter.getDefaultAdapter(activity);
-        if (nfcAdapter == null) {
-            // NFC不可用
-            Toast.makeText(activity, "NFC不可用，或是设备不支持NFC", Toast.LENGTH_LONG).show();
-            activity.finish();
-            return;
-        }
+
+        // 设置NFC设置按钮的点击事件
+        buttonNfcSetting.setOnClickListener(v -> activity.startActivity(new Intent(Settings.ACTION_NFC_SETTINGS)));
 
         setupForegroundDispatchSystem();
-
-        if (!nfcAdapter.isEnabled()) {
-            // 提示用户在设置中启用NFC
-            Toast.makeText(activity, "请在设置中启用NFC功能", Toast.LENGTH_LONG).show();
-            activity.startActivity(new Intent(Settings.ACTION_NFC_SETTINGS));
-        }
     }
 
     private void setupForegroundDispatchSystem() {
@@ -137,14 +128,18 @@ public class NfcHandler {
     }
 
     public void updateNfcStatus() {
-        if (nfcAdapter != null) {
-            if (nfcAdapter.isEnabled()) {
-                textviewNfcStatus.setText("NFC已启用");
-            } else {
-                textviewNfcStatus.setText("NFC已禁用");
-            }
-        } else {
+        if (nfcAdapter == null) {
+            // NFC不可用
+            buttonNfcSetting.setVisibility(View.GONE);
             textviewNfcStatus.setText("此设备不支持NFC");
+        } else if (nfcAdapter.isEnabled()) {
+            // NFC已启用
+            buttonNfcSetting.setVisibility(View.GONE);
+            textviewNfcStatus.setText("NFC已启用");
+        } else {
+            // 提示用户在设置中启用NFC
+            buttonNfcSetting.setVisibility(View.VISIBLE);
+            textviewNfcStatus.setText("NFC功能未启用，请在设置中开启");
         }
     }
 }
