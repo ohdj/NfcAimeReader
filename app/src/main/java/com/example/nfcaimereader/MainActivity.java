@@ -13,9 +13,6 @@ public class MainActivity extends AppCompatActivity {
     // NFC
     NfcHandler nfcHandler;
 
-    // WebSocket
-    private SpiceWebSocket spiceWebSocket;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,9 +23,6 @@ public class MainActivity extends AppCompatActivity {
 
         // NFC
         nfcHandler = new NfcHandler(this);
-
-        // WebSocket
-        spiceWebSocket = new SpiceWebSocket();
     }
 
     @Override
@@ -58,8 +52,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         // 关闭WebSocket连接
-        if (spiceWebSocket != null) {
-            spiceWebSocket.closeWebSocket();
-        }
+        // if (spiceWebSocket != null) {
+        //     spiceWebSocket.closeWebSocket();
+        // }
     }
 }

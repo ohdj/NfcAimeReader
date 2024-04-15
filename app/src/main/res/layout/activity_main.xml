@@ -35,6 +35,12 @@
         android:layout_height="wrap_content"
         android:text="服务器地址" />
 
+    <Button
+        android:id="@+id/button_connect_server"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="连接服务器" />
+
     <com.google.android.material.divider.MaterialDivider
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

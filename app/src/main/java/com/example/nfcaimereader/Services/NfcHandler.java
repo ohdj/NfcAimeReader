@@ -171,7 +171,6 @@ public class NfcHandler {
                     buttonNfcSetting.setVisibility(View.VISIBLE);
                     textviewNfcStatus.setText("NFC功能未启用，请在设置中开启");
                 }
-
             }
         }.start();
 

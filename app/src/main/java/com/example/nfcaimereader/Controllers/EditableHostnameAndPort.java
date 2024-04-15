@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.nfcaimereader.Connect.SpiceWebSocket;
 import com.example.nfcaimereader.R;
 
 public class EditableHostnameAndPort {
@@ -17,6 +18,10 @@ public class EditableHostnameAndPort {
     private final EditText editTextHostname;
     private final EditText editTextPort;
     private final Button buttonControlEditText;
+    private final Button buttonConnectServer;
+
+    // WebSocket
+    private final SpiceWebSocket spiceWebSocket;
 
     public EditableHostnameAndPort(Activity activity) {
         this.activity = activity;
@@ -29,6 +34,13 @@ public class EditableHostnameAndPort {
         setListeners();
 
         loadHostnameAndPort();
+
+        // 连接服务器按钮
+        buttonConnectServer = activity.findViewById(R.id.button_connect_server);
+        buttonConnectServer.setOnClickListener(v -> handleConnectButtonClick());
+
+        // WebSocket
+        spiceWebSocket = new SpiceWebSocket();
     }
 
     private void setListeners() {
@@ -135,5 +147,23 @@ public class EditableHostnameAndPort {
         editor.putString("port", port);
         editor.apply();
         Toast.makeText(activity, "已保存", Toast.LENGTH_SHORT).show();
+    }
+
+    private void handleConnectButtonClick() {
+        String buttonText = buttonConnectServer.getText().toString();
+        switch (buttonText) {
+            case "连接服务器":
+                String server = editTextHostname.getText().toString();
+                String port = editTextPort.getText().toString();
+                // 开始WebSocket连接
+                spiceWebSocket.connectWebSocket("ws://" + server + ":" + port, "");
+                buttonConnectServer.setText("断开连接");
+                break;
+            case "断开连接":
+                // 断开WebSocket连接
+                spiceWebSocket.closeWebSocket();
+                buttonConnectServer.setText("连接服务器");
+                break;
+        }
     }
 }
