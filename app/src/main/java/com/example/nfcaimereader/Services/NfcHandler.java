@@ -16,6 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.nfcaimereader.Connect.SpiceWebSocket;
 import com.example.nfcaimereader.MainActivity;
 import com.example.nfcaimereader.R;
 
@@ -81,33 +82,33 @@ public class NfcHandler {
     }
 
     private void processTag(Tag tag) {
-        StringBuilder cardType = new StringBuilder();
-        StringBuilder cardNumber = new StringBuilder();
+        // 获取标签ID
+        byte[] tagId = tag.getId();
+        // 解析卡片类型
+        String cardType = parseCardType(tag.getTechList());
+        // 将标签ID转换为十六进制字符串，作为卡号
+        String cardNumber = bytesToHex(tagId);
 
-        // 检索支持的技术列表
-        String[] techList = tag.getTechList();
+        // 显示卡片类型和卡号
+        textViewCardType.setText("卡片类型: " + cardType);
+        textViewCardNumber.setText("卡号: " + cardNumber);
+
+        // 发送卡号
+        SpiceWebSocket.getInstance().sendCardId(cardNumber);
+    }
+
+    private String parseCardType(String[] techList) {
+        // 遍历所有技术类型，返回对应的类型字符串
         for (String tech : techList) {
             if (tech.equals(NfcF.class.getName())) {
-                // 处理NfcF类型的卡片
-                cardType.append("卡片类型: Felica");
-
-                byte[] tagId = tag.getId();
-                cardNumber.append("卡号: ").append(bytesToHex(tagId));
-
-                break;
+                // NfcF类型的卡片
+                return "Felica";
             } else if (tech.equals(MifareClassic.class.getName())) {
-                // 处理Mifare Classic类型的卡片
-                cardType.append("卡片类型: Mifare Classic");
-
-                byte[] tagId = tag.getId();
-                cardNumber.append("卡号: ").append(bytesToHex(tagId));
-
-                break;
+                // Mifare Classic类型的卡片
+                return "Mifare Classic";
             }
         }
-
-        textViewCardType.setText(cardType);
-        textViewCardNumber.setText(cardNumber);
+        return "未知卡片类型";
     }
 
     // 将字节数组转换为十六进制字符串

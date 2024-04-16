@@ -20,9 +20,6 @@ public class EditableHostnameAndPort {
     private final Button buttonControlEditText;
     private final Button buttonConnectServer;
 
-    // WebSocket
-    private final SpiceWebSocket spiceWebSocket;
-
     public EditableHostnameAndPort(Activity activity) {
         this.activity = activity;
 
@@ -38,9 +35,6 @@ public class EditableHostnameAndPort {
         // 连接服务器按钮
         buttonConnectServer = activity.findViewById(R.id.button_connect_server);
         buttonConnectServer.setOnClickListener(v -> handleConnectButtonClick());
-
-        // WebSocket
-        spiceWebSocket = new SpiceWebSocket();
     }
 
     private void setListeners() {
@@ -156,12 +150,11 @@ public class EditableHostnameAndPort {
                 String server = editTextHostname.getText().toString();
                 String port = editTextPort.getText().toString();
                 // 开始WebSocket连接
-                spiceWebSocket.connectWebSocket("ws://" + server + ":" + port, "");
-                buttonConnectServer.setText("断开连接");
+                SpiceWebSocket.getInstance().connectWebSocket("ws://" + server + ":" + port);
                 break;
             case "断开连接":
                 // 断开WebSocket连接
-                spiceWebSocket.closeWebSocket();
+                SpiceWebSocket.getInstance().closeWebSocket();
                 buttonConnectServer.setText("连接服务器");
                 break;
         }
