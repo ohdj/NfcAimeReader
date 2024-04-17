@@ -12,6 +12,7 @@ import android.os.CountDownTimer;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,6 +29,8 @@ public class NfcHandler {
     private final ProgressBar progressBarNfcDelay;
     private final Button buttonNfcSetting;
 
+    private final EditText editTextPassword;
+
     // NFC
     private final NfcAdapter nfcAdapter;
     private PendingIntent pendingIntent;
@@ -43,6 +46,8 @@ public class NfcHandler {
         textViewCardNumber = activity.findViewById(R.id.textview_card_number);
         progressBarNfcDelay = activity.findViewById(R.id.progressBar_nfc_delay);
         buttonNfcSetting = activity.findViewById(R.id.button_nfc_setting);
+
+        editTextPassword = activity.findViewById(R.id.edittext_password);
 
         // 检查设备是否支持NFC
         nfcAdapter = NfcAdapter.getDefaultAdapter(activity);
@@ -94,7 +99,7 @@ public class NfcHandler {
         textViewCardNumber.setText("卡号: " + cardNumber);
 
         // 发送卡号
-        SpiceWebSocket.getInstance().sendCardId(cardNumber);
+        SpiceWebSocket.getInstance().sendCardId(cardNumber, String.valueOf(editTextPassword.getText()));
     }
 
     private String parseCardType(String[] techList) {

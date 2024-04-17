@@ -22,6 +22,19 @@
         android:importantForAutofill="no"
         android:inputType="number" />
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="[Security]" />
+
+    <EditText
+        android:id="@+id/edittext_password"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="Password"
+        android:importantForAutofill="no"
+        android:inputType="text" />
+
     <Button
         android:id="@+id/button_control_edit_text"
         android:layout_width="wrap_content"

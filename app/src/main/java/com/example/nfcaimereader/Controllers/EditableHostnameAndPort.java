@@ -15,8 +15,7 @@ import com.example.nfcaimereader.R;
 public class EditableHostnameAndPort {
     private final Activity activity;
 
-    private final EditText editTextHostname;
-    private final EditText editTextPort;
+    private final EditText editTextHostname, editTextPort, editTextPassword;
     private final Button buttonControlEditText;
     private final Button buttonConnectServer;
 
@@ -26,6 +25,7 @@ public class EditableHostnameAndPort {
         // UI
         editTextHostname = activity.findViewById(R.id.edittext_hostname);
         editTextPort = activity.findViewById(R.id.edittext_port);
+        editTextPassword = activity.findViewById(R.id.edittext_password);
         buttonControlEditText = activity.findViewById(R.id.button_control_edit_text);
 
         setListeners();
@@ -150,7 +150,7 @@ public class EditableHostnameAndPort {
                 String server = editTextHostname.getText().toString();
                 String port = editTextPort.getText().toString();
                 // 开始WebSocket连接
-                SpiceWebSocket.getInstance().connectWebSocket("ws://" + server + ":" + port);
+                SpiceWebSocket.getInstance().connectWebSocket("ws://" + server + ":" + port, String.valueOf(editTextPassword.getText()));
                 break;
             case "断开连接":
                 // 断开WebSocket连接
