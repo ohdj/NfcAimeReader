@@ -47,21 +47,23 @@ public class SpiceWebSocket {
         }
     }
 
-    public byte[] RC4(String password, byte[] data) throws Exception {
-        // 创建一个RC4的密钥
-        KeyGenerator kgen = KeyGenerator.getInstance("RC4");
-        SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
-        sr.setSeed(password.getBytes());
-        kgen.init(128, sr);
-        SecretKey key = kgen.generateKey();
-        SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "RC4");
+    // RC4类，包含初始化key，并加解密数据的方法，需要通过构造函数传入key
+    public class RC4 {
+        SecretKeySpec key;
 
-        // 创建并初始化Cipher对象
-        Cipher cipher = Cipher.getInstance("RC4");
-        cipher.init(Cipher.ENCRYPT_MODE, keySpec);
+        public RC4(byte[] key) {
+            initialize(key);
+        }
 
-        // 使用Cipher对象对数据进行加密
-        return cipher.doFinal(data);
+        public void initialize(byte[] key) {
+            this.key = new SecretKeySpec(key, "RC4");
+        }
+
+        public byte[] encrypt(byte[] plaintext) throws Exception {
+            Cipher cipher = Cipher.getInstance("RC4");
+            cipher.init(Cipher.ENCRYPT_MODE, this.key);
+            return cipher.doFinal(plaintext);
+        }
     }
 
     public void connectWebSocket(String serverUri, String password) {
@@ -91,16 +93,14 @@ public class SpiceWebSocket {
             public void onMessage(ByteBuffer bytes) {
                 // 接收到二进制消息时触发
                 try {
-                    byte[] decoded = bytes.array();
-
-                    // 如果存在密码，使用RC4方法进行解密
-                    if (password != null && !password.isEmpty())
-                        decoded = RC4(password, bytes.array());
-
-                    // 将解密后的数据转换为字符串
-                    String json = new String(decoded, "UTF-8");
-
-                    // 打印JSON数据
+                    byte[] decrypted;
+                    if (password == null || password.isEmpty()) {
+                        decrypted = bytes.array();
+                    } else {
+                        RC4 rc4 = new RC4(password.getBytes());
+                        decrypted = rc4.encrypt(bytes.array());
+                    }
+                    String json = new String(decrypted, "UTF-8");
                     Log.d("WebSocket", "接收到消息: " + json);
                 } catch (Exception e) {
                     Log.e("WebSocket", "解密出错", e);
@@ -125,16 +125,17 @@ public class SpiceWebSocket {
         webSocketClient.connect();
     }
 
-    public void sendCardId(String password, String idmValue) {
+    public void sendCardId(String idmValue, String password) {
         try {
             String jsonRequest = "{\"id\": 1, \"module\": \"card\", \"function\": \"insert\", \"params\": [0, \"" + idmValue + "\"]}";
-            byte[] encoded = jsonRequest.getBytes();
-
-            // 如果存在密码，使用RC4方法进行加密
-            if (password != null && !password.isEmpty())
-                encoded = RC4(password, jsonRequest.getBytes());
-
-            ByteBuffer buffer = ByteBuffer.wrap(encoded);
+            byte[] encrypted;
+            if (password == null || password.isEmpty()) {
+                encrypted = jsonRequest.getBytes("UTF-8");
+            } else {
+                RC4 rc4 = new RC4(password.getBytes());
+                encrypted = rc4.encrypt(jsonRequest.getBytes("UTF-8"));
+            }
+            ByteBuffer buffer = ByteBuffer.wrap(encrypted);
             webSocketClient.send(buffer);
         } catch (Exception e) {
             Log.e("WebSocket", "加密发生错误", e);
