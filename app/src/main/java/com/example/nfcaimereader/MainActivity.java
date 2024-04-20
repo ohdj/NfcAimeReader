@@ -1,8 +1,6 @@
 package com.example.nfcaimereader;
 
-import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
@@ -16,19 +14,18 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.nfcaimereader.Connect.SpiceWebSocket;
+import com.example.nfcaimereader.Client.SpiceClient;
 import com.example.nfcaimereader.Controllers.EditableHostnameAndPort;
 import com.example.nfcaimereader.Services.NfcEventListener;
 import com.example.nfcaimereader.Services.NfcHandler;
+import com.example.nfcaimereader.Services.NfcHelper;
 
-public class MainActivity extends AppCompatActivity implements SpiceWebSocket.ConnectionStatusCallback, NfcEventListener {
-    // NFC
-    private NfcAdapter nfcAdapter;
-    private PendingIntent pendingIntent;
-    private IntentFilter[] intentFiltersArray;
-    private String[][] techListsArray;
+public class MainActivity extends AppCompatActivity implements SpiceClient.ConnectionStatusCallback, NfcEventListener {
+    // NFC初始化
+    private NfcHelper nfcHelper;
     private NfcHandler nfcHandler;
 
+    // UI
     private EditText editTextPassword;
     private Button buttonConnectServer;
     private TextView textViewServerConnectionStatus, textviewNfcStatus, textViewCardType, textViewCardNumber;
@@ -40,25 +37,22 @@ public class MainActivity extends AppCompatActivity implements SpiceWebSocket.Co
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 检查设备是否支持NFC
-        nfcAdapter = NfcAdapter.getDefaultAdapter(this);
-
-        pendingIntent = PendingIntent.getActivity(
-                this, 0, new Intent(this, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
-                PendingIntent.FLAG_MUTABLE
-        );
-        IntentFilter tech = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
-
-        intentFiltersArray = new IntentFilter[]{tech};
-
-        techListsArray = new String[][]{
-                new String[]{"android.nfc.tech.NfcF"},
-                new String[]{"android.nfc.tech.MifareClassic"}
-        };
-
+        // NFC初始化
+        nfcHelper = new NfcHelper(this);
+        // NFC行为
         nfcHandler = new NfcHandler(this);
 
-        // UI
+        // 编辑服务器按钮
+        new EditableHostnameAndPort(this);
+
+        // WebSocket回调
+        SpiceClient.getInstance().setConnectionStatusCallback(this);
+
+        // 初始化UI控件
+        initUI();
+    }
+
+    private void initUI() {
         editTextPassword = findViewById(R.id.edittext_password);
 
         buttonConnectServer = findViewById(R.id.button_connect_server);
@@ -74,11 +68,6 @@ public class MainActivity extends AppCompatActivity implements SpiceWebSocket.Co
 
         // 设置NFC设置按钮的点击事件
         buttonNfcSetting.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_NFC_SETTINGS)));
-
-        // 编辑服务器
-        new EditableHostnameAndPort(this);
-
-        SpiceWebSocket.getInstance().setConnectionStatusCallback(this);
     }
 
     @Override
@@ -86,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements SpiceWebSocket.Co
         // 显示卡片类型和卡号
         textViewCardType.setText("卡片类型: " + cardType);
         textViewCardNumber.setText("卡号: " + cardNumber);
-        SpiceWebSocket.getInstance().sendCardId(cardNumber, String.valueOf(editTextPassword.getText()));
+        SpiceClient.getInstance().sendCardId(cardNumber, String.valueOf(editTextPassword.getText()));
     }
 
     @Override
@@ -110,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements SpiceWebSocket.Co
     protected void onResume() {
         super.onResume();
         if (nfcHandler != null) {
-            nfcAdapter.enableForegroundDispatch(this, pendingIntent, intentFiltersArray, techListsArray);
+            nfcHelper.enableNfcScan(this);
             checkNfcStatus();
         }
     }
@@ -119,12 +108,12 @@ public class MainActivity extends AppCompatActivity implements SpiceWebSocket.Co
 
     public void checkNfcStatus() {
         // NFC不可用
-        if (nfcAdapter == null) return;
+        if (nfcHelper == null) return;
 
         buttonNfcSetting.setVisibility(View.GONE);
 
         // NFC已启用
-        if (nfcAdapter.isEnabled()) {
+        if (nfcHelper.isNfcEnabled()) {
             textviewNfcStatus.setText("NFC已启用");
             return;
         }
@@ -146,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements SpiceWebSocket.Co
                 // 隐藏进度条
                 progressBarNfcDelay.setVisibility(View.GONE);
 
-                if (nfcAdapter.isEnabled()) {
+                if (nfcHelper.isNfcEnabled()) {
                     // NFC已启用
                     buttonNfcSetting.setVisibility(View.GONE);
                     textviewNfcStatus.setText("NFC已启用");
@@ -180,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements SpiceWebSocket.Co
     protected void onPause() {
         super.onPause();
         if (nfcHandler != null) {
-            nfcAdapter.disableForegroundDispatch(this);
+            nfcHelper.disableNfcScan(this);
         }
     }
 
@@ -188,6 +177,6 @@ public class MainActivity extends AppCompatActivity implements SpiceWebSocket.Co
     protected void onDestroy() {
         super.onDestroy();
         // 关闭WebSocket连接
-        SpiceWebSocket.getInstance().closeWebSocket();
+        SpiceClient.getInstance().closeWebSocket();
     }
 }

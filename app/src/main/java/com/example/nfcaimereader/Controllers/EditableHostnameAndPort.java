@@ -9,7 +9,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.nfcaimereader.Connect.SpiceWebSocket;
+import com.example.nfcaimereader.Client.SpiceClient;
 import com.example.nfcaimereader.R;
 
 public class EditableHostnameAndPort {
@@ -150,11 +150,11 @@ public class EditableHostnameAndPort {
                 String server = editTextHostname.getText().toString();
                 String port = editTextPort.getText().toString();
                 // 开始WebSocket连接
-                SpiceWebSocket.getInstance().connectWebSocket("ws://" + server + ":" + port, String.valueOf(editTextPassword.getText()));
+                SpiceClient.getInstance().connectWebSocket("ws://" + server + ":" + port, editTextPassword.getText().toString());
                 break;
             case "断开连接":
                 // 断开WebSocket连接
-                SpiceWebSocket.getInstance().closeWebSocket();
+                SpiceClient.getInstance().closeWebSocket();
                 buttonConnectServer.setText("连接服务器");
                 break;
         }
