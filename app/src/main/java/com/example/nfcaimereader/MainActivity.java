@@ -13,12 +13,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.example.nfcaimereader.Client.SpiceClient;
 import com.example.nfcaimereader.Controllers.EditableHostnameAndPort;
 import com.example.nfcaimereader.Services.NfcEventListener;
 import com.example.nfcaimereader.Services.NfcHandler;
 import com.example.nfcaimereader.Services.NfcHelper;
+import com.google.android.material.button.MaterialButton;
 
 public class MainActivity extends AppCompatActivity implements SpiceClient.ConnectionStatusCallback, NfcEventListener {
     // NFC初始化
@@ -27,7 +29,7 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
 
     // UI
     private EditText editTextPassword;
-    private Button buttonConnectServer;
+    private MaterialButton buttonConnectServer;
     private TextView textViewServerConnectionStatus, textviewNfcStatus, textViewCardType, textViewCardNumber;
     private ProgressBar progressBarNfcDelay;
     private Button buttonNfcSetting;
@@ -39,7 +41,6 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
 
         // NFC初始化
         nfcHelper = new NfcHelper(this);
-        // NFC行为
         nfcHandler = new NfcHandler(this);
 
         // 编辑服务器按钮
@@ -71,17 +72,29 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
     }
 
     @Override
+    public void onConnectionStatusChanged(boolean isConnected) {
+        runOnUiThread(() -> {
+            buttonConnectServer.setText(isConnected ? "断开连接" : "连接服务器");
+            buttonConnectServer.setIcon(ContextCompat.getDrawable(this, isConnected ? R.drawable.ic_connect_server_close : R.drawable.ic_connect_server));
+        });
+        runOnUiThread(() -> textViewServerConnectionStatus.setText(isConnected ? "已连接" : "已断开"));
+    }
+
+    @Override
+    public void onMessageReceived(final String message) {
+        // 确保在主线程上运行
+        runOnUiThread(() -> {
+            TextView textViewServerResponse = findViewById(R.id.textview_server_response);
+            textViewServerResponse.setText(message);
+        });
+    }
+
+    @Override
     public void onTagDiscovered(String cardType, String cardNumber) {
         // 显示卡片类型和卡号
         textViewCardType.setText("卡片类型: " + cardType);
         textViewCardNumber.setText("卡号: " + cardNumber);
         SpiceClient.getInstance().sendCardId(cardNumber, String.valueOf(editTextPassword.getText()));
-    }
-
-    @Override
-    public void onConnectionStatusChanged(boolean isConnected) {
-        runOnUiThread(() -> buttonConnectServer.setText(isConnected ? "断开连接" : "连接服务器"));
-        runOnUiThread(() -> textViewServerConnectionStatus.setText(isConnected ? "已连接" : "已断开"));
     }
 
     @Override

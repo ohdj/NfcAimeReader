@@ -26,10 +26,18 @@ public class SpiceClient {
 
     public interface ConnectionStatusCallback {
         void onConnectionStatusChanged(boolean isConnected);
+
+        void onMessageReceived(String message);
     }
 
     public void setConnectionStatusCallback(ConnectionStatusCallback callback) {
         this.callback = callback;
+    }
+
+    public void updateWebSocketResponse(String message) {
+        if (callback != null) {
+            callback.onMessageReceived(message);
+        }
     }
 
     public void connectWebSocket(String serverUri, String password) {
@@ -48,14 +56,14 @@ public class SpiceClient {
     public void sendCardId(String idmValue, String password) {
         try {
             String jsonRequest = "{\"id\": 1, \"module\": \"card\", \"function\": \"insert\", \"params\": [0, \"" + idmValue + "\"]}";
-            byte[] encrypted;
+            byte[] message;
             if (password == null || password.isEmpty()) {
-                encrypted = jsonRequest.getBytes("UTF-8");
+                message = jsonRequest.getBytes("UTF-8");
             } else {
                 RC4 rc4 = new RC4(password.getBytes());
-                encrypted = rc4.encrypt(jsonRequest.getBytes("UTF-8"));
+                message = rc4.encrypt(jsonRequest.getBytes("UTF-8"));
             }
-            ByteBuffer buffer = ByteBuffer.wrap(encrypted);
+            ByteBuffer buffer = ByteBuffer.wrap(message);
             webSocketClient.send(buffer);
         } catch (Exception e) {
             Log.e("WebSocket", "加密发生错误", e);

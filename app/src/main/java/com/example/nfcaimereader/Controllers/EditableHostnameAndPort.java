@@ -9,14 +9,17 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.core.content.ContextCompat;
+
 import com.example.nfcaimereader.Client.SpiceClient;
 import com.example.nfcaimereader.R;
+import com.google.android.material.button.MaterialButton;
 
 public class EditableHostnameAndPort {
     private final Activity activity;
 
     private final EditText editTextHostname, editTextPort, editTextPassword;
-    private final Button buttonControlEditText;
+    private final MaterialButton buttonControlEditText;
     private final Button buttonConnectServer;
 
     public EditableHostnameAndPort(Activity activity) {
@@ -98,11 +101,13 @@ public class EditableHostnameAndPort {
                 editTextHostname.setEnabled(true);
                 editTextPort.setEnabled(true);
                 buttonControlEditText.setText("保存");
+                buttonControlEditText.setIcon(ContextCompat.getDrawable(activity, R.drawable.ic_editor_save));
                 break;
             case "保存":
                 editTextHostname.setEnabled(false);
                 editTextPort.setEnabled(false);
                 buttonControlEditText.setText("编辑");
+                buttonControlEditText.setIcon(ContextCompat.getDrawable(activity, R.drawable.ic_editor_edit));
 
                 // 永久化保存hostname和port
                 String hostnameString = editTextHostname.getText().toString();
@@ -130,6 +135,7 @@ public class EditableHostnameAndPort {
             editTextHostname.setEnabled(false);
             editTextPort.setEnabled(false);
             buttonControlEditText.setText("编辑");
+            buttonControlEditText.setIcon(ContextCompat.getDrawable(activity, R.drawable.ic_editor_edit));
             Toast.makeText(activity, "已读取之前保存的服务器", Toast.LENGTH_SHORT).show();
         }
     }
@@ -149,13 +155,13 @@ public class EditableHostnameAndPort {
             case "连接服务器":
                 String server = editTextHostname.getText().toString();
                 String port = editTextPort.getText().toString();
+                String password = editTextPassword.getText().toString();
                 // 开始WebSocket连接
-                SpiceClient.getInstance().connectWebSocket("ws://" + server + ":" + port, editTextPassword.getText().toString());
+                SpiceClient.getInstance().connectWebSocket("ws://" + server + ":" + port, password);
                 break;
             case "断开连接":
                 // 断开WebSocket连接
                 SpiceClient.getInstance().closeWebSocket();
-                buttonConnectServer.setText("连接服务器");
                 break;
         }
     }

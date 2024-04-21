@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
@@ -22,37 +23,40 @@
         android:importantForAutofill="no"
         android:inputType="number" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="[Security]" />
-
     <EditText
         android:id="@+id/edittext_password"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:hint="Password"
+        android:hint="Password (optional)"
         android:importantForAutofill="no"
         android:inputType="text" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/button_control_edit_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:enabled="false"
-        android:text="保存" />
+        android:text="保存"
+        app:icon="@drawable/ic_editor_save" />
+
+    <com.google.android.material.divider.MaterialDivider
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp" />
 
     <TextView
-        android:id="@+id/textview_server_address"
+        android:id="@+id/textview_server_response"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="服务器地址" />
+        android:text="服务器响应" />
 
-    <Button
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/button_connect_server"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="连接服务器" />
+        android:text="连接服务器"
+        app:icon="@drawable/ic_connect_server" />
 
     <TextView
         android:id="@+id/textview_server_connection_status"
@@ -85,13 +89,13 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <Button
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/button_nfc_setting"
-        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="启用NFC"
-        android:visibility="gone" />
+        android:text="去启用NFC"
+        android:visibility="gone"
+        app:icon="@drawable/ic_menu_open_external" />
 
     <TextView
         android:id="@+id/textview_card_type"
