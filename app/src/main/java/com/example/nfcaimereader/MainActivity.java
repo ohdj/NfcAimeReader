@@ -123,25 +123,27 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
         // NFC不可用
         if (nfcHelper == null) return;
 
-        buttonNfcSetting.setVisibility(View.GONE);
-
-        // NFC已启用
-        if (nfcHelper.isNfcEnabled()) {
-            textviewNfcStatus.setText("NFC已启用");
-            return;
-        }
-
-        progressBarNfcDelay.setVisibility(View.VISIBLE);
-
         if (countDownTimer != null) {
             countDownTimer.cancel();
         }
 
-        countDownTimer = new CountDownTimer(3000, 1000) {
+        progressBarNfcDelay.setVisibility(View.VISIBLE);
+
+        // 检测时长3秒
+        final long startTime = 3000;
+        countDownTimer = new CountDownTimer(startTime, 100) {
             public void onTick(long millisUntilFinished) {
-                // 更新文本视图的倒计时
-                int secondsLeft = (int) (millisUntilFinished / 1000) + 1;
-                textviewNfcStatus.setText("NFC状态检测中..." + secondsLeft);
+                if (nfcHelper.isNfcEnabled()) {
+                    // NFC已启用，取消显示等待时长，更新显示NFC状态并结束
+                    cancel();
+                    progressBarNfcDelay.setVisibility(View.GONE);
+                    buttonNfcSetting.setVisibility(View.GONE);
+                    textviewNfcStatus.setText("NFC已启用");
+                } else {
+                    // 如果当前设备的NFC仍然未启用，则继续检测，并更新视图的等待时长
+                    float secondsElapsed = (startTime - millisUntilFinished) / 1000f;
+                    textviewNfcStatus.setText(String.format("NFC状态检测中...%.1f秒", secondsElapsed));
+                }
             }
 
             public void onFinish() {
@@ -159,23 +161,6 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
                 }
             }
         }.start();
-
-        // Thread statusCheckThread = new Thread(() -> {
-        //     try {
-        //         boolean initialStatus = nfcAdapter.isEnabled();
-        //         boolean currentStatus;
-        //         int retries = 3; // 最多检查次数
-        //         do {
-        //             Thread.sleep(1000); // 1秒暂停时间，减少轮询频率
-        //             currentStatus = nfcAdapter.isEnabled();
-        //             retries--;
-        //         } while (initialStatus == currentStatus && retries > 0);
-        //         activity.runOnUiThread(this::updateNfcStatus);
-        //     } catch (InterruptedException e) {
-        //         Thread.currentThread().interrupt();
-        //     }
-        // });
-        // statusCheckThread.start();
     }
 
     @Override
