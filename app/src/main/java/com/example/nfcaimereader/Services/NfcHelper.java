@@ -35,14 +35,18 @@ public class NfcHelper {
     }
 
     public void enableNfcScan(Activity activity) {
-        nfcAdapter.enableForegroundDispatch(activity, pendingIntent, intentFiltersArray, techListsArray);
+        if (nfcAdapter != null) {
+            nfcAdapter.enableForegroundDispatch(activity, pendingIntent, intentFiltersArray, techListsArray);
+        }
     }
 
     public void disableNfcScan(Activity activity) {
-        nfcAdapter.disableForegroundDispatch(activity);
+        if (nfcAdapter != null) {
+            nfcAdapter.disableForegroundDispatch(activity);
+        }
     }
 
     public boolean isNfcEnabled() {
-        return nfcAdapter.isEnabled();
+        return nfcAdapter != null && nfcAdapter.isEnabled();
     }
 }
