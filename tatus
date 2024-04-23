@@ -1,0 +1,62 @@
+[1mdiff --git a/app/src/main/java/com/example/nfcaimereader/Services/NfcHelper.java b/app/src/main/java/com/example/nfcaimereader/Services/NfcHelper.java[m
+[1mindex 3d545f6..c1d9aac 100644[m
+[1m--- a/app/src/main/java/com/example/nfcaimereader/Services/NfcHelper.java[m
+[1m+++ b/app/src/main/java/com/example/nfcaimereader/Services/NfcHelper.java[m
+[36m@@ -5,13 +5,13 @@[m [mimport android.app.PendingIntent;[m
+ import android.content.Intent;[m
+ import android.content.IntentFilter;[m
+ import android.nfc.NfcAdapter;[m
+[32m+[m[32mimport android.widget.Toast;[m
+ [m
+ import com.example.nfcaimereader.MainActivity;[m
+ [m
+ public class NfcHelper {[m
+     // NFC[m
+     private final NfcAdapter nfcAdapter;[m
+[31m-[m
+     private final PendingIntent pendingIntent;[m
+     private final IntentFilter[] intentFiltersArray;[m
+     private final String[][] techListsArray;[m
+[36m@@ -19,13 +19,17 @@[m [mpublic class NfcHelper {[m
+     public NfcHelper(Activity activity) {[m
+         // 检查设备是否支持NFC[m
+         nfcAdapter = NfcAdapter.getDefaultAdapter(activity);[m
+[32m+[m[32m        if (nfcAdapter == null) {[m
+[32m+[m[32m            // 设备不支持NFC[m
+[32m+[m[32m            Toast.makeText(activity, "This device does not support NFC.", Toast.LENGTH_SHORT).show();[m
+[32m+[m[32m        }[m
+ [m
+         pendingIntent = PendingIntent.getActivity([m
+                 activity, 0, new Intent(activity, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),[m
+                 PendingIntent.FLAG_MUTABLE[m
+         );[m
+[31m-        IntentFilter tech = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);[m
+ [m
+[32m+[m[32m        IntentFilter tech = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);[m
+         intentFiltersArray = new IntentFilter[]{tech};[m
+ [m
+         techListsArray = new String[][]{[m
+[36m@@ -35,14 +39,18 @@[m [mpublic class NfcHelper {[m
+     }[m
+ [m
+     public void enableNfcScan(Activity activity) {[m
+[31m-        nfcAdapter.enableForegroundDispatch(activity, pendingIntent, intentFiltersArray, techListsArray);[m
+[32m+[m[32m        if (nfcAdapter != null) {[m
+[32m+[m[32m            nfcAdapter.enableForegroundDispatch(activity, pendingIntent, intentFiltersArray, techListsArray);[m
+[32m+[m[32m        }[m
+     }[m
+ [m
+     public void disableNfcScan(Activity activity) {[m
+[31m-        nfcAdapter.disableForegroundDispatch(activity);[m
+[32m+[m[32m        if (nfcAdapter != null) {[m
+[32m+[m[32m            nfcAdapter.disableForegroundDispatch(activity);[m
+[32m+[m[32m        }[m
+     }[m
+ [m
+     public boolean isNfcEnabled() {[m
+[31m-        return nfcAdapter.isEnabled();[m
+[32m+[m[32m        return nfcAdapter != null && nfcAdapter.isEnabled();[m
+     }[m
+[31m-}[m
+[32m+[m[32m}[m
+\ No newline at end of file[m

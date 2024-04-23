@@ -21,7 +21,7 @@ public class NfcHelper {
         nfcAdapter = NfcAdapter.getDefaultAdapter(activity);
         if (nfcAdapter == null) {
             // 设备不支持NFC
-            Toast.makeText(activity, "This device does not support NFC.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "你的设备有NFC？", Toast.LENGTH_SHORT).show();
         }
 
         pendingIntent = PendingIntent.getActivity(
