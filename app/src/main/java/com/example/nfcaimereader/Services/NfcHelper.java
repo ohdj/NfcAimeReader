@@ -10,15 +10,20 @@ import com.example.nfcaimereader.MainActivity;
 
 public class NfcHelper {
     // NFC
-    private final NfcAdapter nfcAdapter;
+    public static NfcAdapter nfcAdapter;
 
-    private final PendingIntent pendingIntent;
-    private final IntentFilter[] intentFiltersArray;
-    private final String[][] techListsArray;
+    private PendingIntent pendingIntent;
+    private IntentFilter[] intentFiltersArray;
+    private String[][] techListsArray;
 
     public NfcHelper(Activity activity) {
         // 检查设备是否支持NFC
         nfcAdapter = NfcAdapter.getDefaultAdapter(activity);
+
+        // 设备不支持NFC
+        if (nfcAdapter == null) {
+            return;
+        }
 
         pendingIntent = PendingIntent.getActivity(
                 activity, 0, new Intent(activity, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
@@ -44,9 +49,5 @@ public class NfcHelper {
         if (nfcAdapter != null) {
             nfcAdapter.disableForegroundDispatch(activity);
         }
-    }
-
-    public boolean isNfcEnabled() {
-        return nfcAdapter != null && nfcAdapter.isEnabled();
     }
 }

@@ -111,17 +111,15 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
     @Override
     protected void onResume() {
         super.onResume();
-        if (nfcHandler != null) {
-            nfcHelper.enableNfcScan(this);
-            checkNfcStatus();
-        }
+        nfcHelper.enableNfcScan(this);
+        checkNfcStatus();
     }
 
     private CountDownTimer countDownTimer;
 
     public void checkNfcStatus() {
         // NFC不可用
-        if (nfcHelper == null) return;
+        if (NfcHelper.nfcAdapter == null) return;
 
         if (countDownTimer != null) {
             countDownTimer.cancel();
@@ -133,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
         final long startTime = 3000;
         countDownTimer = new CountDownTimer(startTime, 100) {
             public void onTick(long millisUntilFinished) {
-                if (nfcHelper.isNfcEnabled()) {
+                if (NfcHelper.nfcAdapter.isEnabled()) {
                     // NFC已启用，取消显示等待时长，更新显示NFC状态并结束
                     cancel();
                     progressBarNfcDelay.setVisibility(View.GONE);
@@ -150,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
                 // 隐藏进度条
                 progressBarNfcDelay.setVisibility(View.GONE);
 
-                if (nfcHelper.isNfcEnabled()) {
+                if (NfcHelper.nfcAdapter.isEnabled()) {
                     // NFC已启用
                     buttonNfcSetting.setVisibility(View.GONE);
                     textviewNfcStatus.setText("NFC已启用");
@@ -166,9 +164,7 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
     @Override
     protected void onPause() {
         super.onPause();
-        if (nfcHandler != null) {
-            nfcHelper.disableNfcScan(this);
-        }
+        nfcHelper.disableNfcScan(this);
     }
 
     @Override
