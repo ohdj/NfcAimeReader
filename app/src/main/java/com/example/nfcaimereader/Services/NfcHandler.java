@@ -18,6 +18,10 @@ public class NfcHandler {
         String cardType = parseCardType(tag.getTechList());
         // 将标签ID转换为十六进制字符串，作为卡号
         String cardNumber = bytesToHex(tagId);
+        //卡号长度小于16时进入循环补0
+        while (cardNumber.length()<16){
+            cardNumber = "0" + cardNumber;
+        }
         // 通过事件监听器响应数据
         eventListener.onTagDiscovered(cardType, cardNumber);
     }
