@@ -1,10 +1,12 @@
 package com.example.nfcaimereader;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
@@ -39,6 +41,24 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // 初始化UI控件
+        initUI();
+
+        // 检测NFC状态
+        IntentFilter filter = new IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
+        this.registerReceiver(mReceiver, filter);
+
+        NfcAdapter adapter = NfcAdapter.getDefaultAdapter(this);
+        if (adapter != null && adapter.isEnabled()) {
+            progressBarNfcDelay.setVisibility(View.GONE);
+            buttonNfcSetting.setVisibility(View.GONE);
+            textviewNfcStatus.setText("NFC已开启");
+        } else if (adapter != null && !adapter.isEnabled()) {
+            progressBarNfcDelay.setVisibility(View.GONE);
+            buttonNfcSetting.setVisibility(View.VISIBLE);
+            textviewNfcStatus.setText("NFC已关闭");
+        }
+
         // NFC初始化
         nfcHelper = new NfcHelper(this);
         nfcHandler = new NfcHandler(this);
@@ -48,9 +68,6 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
 
         // WebSocket回调
         SpiceClient.getInstance().setConnectionStatusCallback(this);
-
-        // 初始化UI控件
-        initUI();
     }
 
     private void initUI() {
@@ -112,54 +129,43 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
     protected void onResume() {
         super.onResume();
         nfcHelper.enableNfcScan(this);
-        checkNfcStatus();
     }
 
-    private CountDownTimer countDownTimer;
-
-    public void checkNfcStatus() {
-        // NFC不可用
-        if (NfcHelper.nfcAdapter == null) return;
-
-        if (countDownTimer != null) {
-            countDownTimer.cancel();
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if (NfcAdapter.ACTION_ADAPTER_STATE_CHANGED.equals(action)) {
+                final int state = intent.getIntExtra(NfcAdapter.EXTRA_ADAPTER_STATE, NfcAdapter.STATE_OFF);
+                switch (state) {
+                    case NfcAdapter.STATE_OFF:
+                        // NFC已关闭
+                        progressBarNfcDelay.setVisibility(View.GONE);
+                        buttonNfcSetting.setVisibility(View.VISIBLE);
+                        textviewNfcStatus.setText("NFC已关闭");
+                        break;
+                    case NfcAdapter.STATE_TURNING_OFF:
+                        // NFC正在关闭
+                        progressBarNfcDelay.setVisibility(View.VISIBLE);
+                        buttonNfcSetting.setVisibility(View.GONE);
+                        textviewNfcStatus.setText("NFC正在关闭");
+                        break;
+                    case NfcAdapter.STATE_ON:
+                        // NFC已开启
+                        progressBarNfcDelay.setVisibility(View.GONE);
+                        buttonNfcSetting.setVisibility(View.GONE);
+                        textviewNfcStatus.setText("NFC已开启");
+                        break;
+                    case NfcAdapter.STATE_TURNING_ON:
+                        // NFC正在开启
+                        progressBarNfcDelay.setVisibility(View.VISIBLE);
+                        buttonNfcSetting.setVisibility(View.GONE);
+                        textviewNfcStatus.setText("NFC正在开启");
+                        break;
+                }
+            }
         }
-
-        progressBarNfcDelay.setVisibility(View.VISIBLE);
-
-        // 检测时长3秒
-        final long startTime = 3000;
-        countDownTimer = new CountDownTimer(startTime, 100) {
-            public void onTick(long millisUntilFinished) {
-                if (NfcHelper.nfcAdapter.isEnabled()) {
-                    // NFC已启用，取消显示等待时长，更新显示NFC状态并结束
-                    cancel();
-                    progressBarNfcDelay.setVisibility(View.GONE);
-                    buttonNfcSetting.setVisibility(View.GONE);
-                    textviewNfcStatus.setText("NFC已启用");
-                } else {
-                    // 如果当前设备的NFC仍然未启用，则继续检测，并更新视图的等待时长
-                    float secondsElapsed = (startTime - millisUntilFinished) / 1000f;
-                    textviewNfcStatus.setText(String.format("NFC状态检测中...%.1f秒", secondsElapsed));
-                }
-            }
-
-            public void onFinish() {
-                // 隐藏进度条
-                progressBarNfcDelay.setVisibility(View.GONE);
-
-                if (NfcHelper.nfcAdapter.isEnabled()) {
-                    // NFC已启用
-                    buttonNfcSetting.setVisibility(View.GONE);
-                    textviewNfcStatus.setText("NFC已启用");
-                } else {
-                    // 提示用户在设置中启用NFC
-                    buttonNfcSetting.setVisibility(View.VISIBLE);
-                    textviewNfcStatus.setText("NFC功能未启用，请在设置中开启");
-                }
-            }
-        }.start();
-    }
+    };
 
     @Override
     protected void onPause() {
@@ -170,6 +176,7 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        this.unregisterReceiver(mReceiver);
         // 关闭WebSocket连接
         SpiceClient.getInstance().closeWebSocket();
     }

@@ -93,7 +93,7 @@
         android:id="@+id/button_nfc_setting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="去启用NFC"
+        android:text="去开启NFC"
         android:visibility="gone"
         app:icon="@drawable/ic_menu_open_external" />
 
