@@ -1,0 +1,84 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - '.github/release.json' # 当release.json变化时触发workflow
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Extract version information
+        id: get_version_info
+        run: |
+          echo "CODE=$(cat .github/release.json | jq -r '.code')" >> $GITHUB_ENV
+          echo "VERSION=$(cat .github/release.json | jq -r '.version')" >> $GITHUB_ENV
+
+      - name: Generate signing.properties
+        run: |
+          ${{ secrets.BASH_DOWNLOAD_JKS }}
+          echo "KEYSTORE_FILE = ${{ github.workspace }}/keystore.jks" > app/signing.properties
+          echo "KEYSTORE_PASSWORD = ${{ secrets.KEYSTORE_PASSWORD }}" >> app/signing.properties
+          echo "KEY_ALIAS = ${{ secrets.KEY_ALIAS }}" >> app/signing.properties
+          echo "KEY_PASSWORD = ${{ secrets.KEY_PASSWORD }}" >> app/signing.properties
+          cat app/signing.properties
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew assembleRelease
+
+      - name: Create Release Tag
+        run: git tag v${{ env.VERSION }}
+
+      - name: Push Tag
+        run: git push origin v${{ env.VERSION }}
+
+      - name: Rename APK
+        run: mv app/build/outputs/apk/release/app-release.apk NfcAimeReader_v${{ env.VERSION }}.apk
+
+      - name: Calculate APK hash (MD5 and SHA1)
+        id: apk_hash
+        run: |
+          echo "MD5=$(md5sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
+          echo "SHA1=$(sha1sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
+
+      - name: Create Release Draft
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.VERSION }}
+          release_name: v${{ env.VERSION }}
+          draft: true
+          body: |
+            ### Checksum
+            | File | NfcAimeReader_v${{ env.VERSION }}.apk |
+            | ---- | ------------------------------------ |
+            | MD5 | ${{ env.MD5 }} |
+            | SHA1 | ${{ env.SHA1 }} |
+
+            [View changes on GitHub](https://github.com/ohdj/NfcAimeReader/commits/v${{ env.VERSION }})
+
+      - name: Upload APK
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./NfcAimeReader_v${{ env.VERSION }}.apk
+          asset_name: NfcAimeReader_v${{ env.VERSION }}.apk
+          asset_content_type: application/vnd.android.package-archive
