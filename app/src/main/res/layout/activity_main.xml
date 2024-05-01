@@ -82,7 +82,7 @@
             android:text="此设备不支持NFC" />
 
         <ProgressBar
-            android:id="@+id/progressBar_nfc_delay"
+            android:id="@+id/progressbar_nfc_delay"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:indeterminate="true"

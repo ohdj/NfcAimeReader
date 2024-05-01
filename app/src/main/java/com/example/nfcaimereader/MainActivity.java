@@ -9,10 +9,6 @@ import android.nfc.Tag;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -22,27 +18,20 @@ import com.example.nfcaimereader.Controllers.EditableHostnameAndPort;
 import com.example.nfcaimereader.Services.NfcEventListener;
 import com.example.nfcaimereader.Services.NfcHandler;
 import com.example.nfcaimereader.Services.NfcHelper;
-import com.google.android.material.button.MaterialButton;
+import com.example.nfcaimereader.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity implements SpiceClient.ConnectionStatusCallback, NfcEventListener {
     // NFC初始化
     private NfcHelper nfcHelper;
     private NfcHandler nfcHandler;
 
-    // UI
-    private EditText editTextPassword;
-    private MaterialButton buttonConnectServer;
-    private TextView textViewServerConnectionStatus, textviewNfcStatus, textViewCardType, textViewCardNumber;
-    private ProgressBar progressBarNfcDelay;
-    private Button buttonNfcSetting;
+    private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        // 初始化UI控件
-        initUI();
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         // 检测NFC状态
         IntentFilter filter = new IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
@@ -50,13 +39,13 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
 
         NfcAdapter adapter = NfcAdapter.getDefaultAdapter(this);
         if (adapter != null && adapter.isEnabled()) {
-            progressBarNfcDelay.setVisibility(View.GONE);
-            buttonNfcSetting.setVisibility(View.GONE);
-            textviewNfcStatus.setText("NFC已开启");
+            binding.progressbarNfcDelay.setVisibility(View.GONE);
+            binding.buttonNfcSetting.setVisibility(View.GONE);
+            binding.textviewNfcStatus.setText("NFC已开启");
         } else if (adapter != null && !adapter.isEnabled()) {
-            progressBarNfcDelay.setVisibility(View.GONE);
-            buttonNfcSetting.setVisibility(View.VISIBLE);
-            textviewNfcStatus.setText("NFC已关闭");
+            binding.progressbarNfcDelay.setVisibility(View.GONE);
+            binding.buttonNfcSetting.setVisibility(View.VISIBLE);
+            binding.textviewNfcStatus.setText("NFC已关闭");
         }
 
         // NFC初始化
@@ -68,50 +57,32 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
 
         // WebSocket回调
         SpiceClient.getInstance().setConnectionStatusCallback(this);
-    }
-
-    private void initUI() {
-        editTextPassword = findViewById(R.id.edittext_password);
-
-        buttonConnectServer = findViewById(R.id.button_connect_server);
-
-        textViewServerConnectionStatus = findViewById(R.id.textview_server_connection_status);
-        textviewNfcStatus = findViewById(R.id.textview_nfc_status);
-        textViewCardType = findViewById(R.id.textview_card_type);
-        textViewCardNumber = findViewById(R.id.textview_card_number);
-
-        progressBarNfcDelay = findViewById(R.id.progressBar_nfc_delay);
-
-        buttonNfcSetting = findViewById(R.id.button_nfc_setting);
 
         // 设置NFC设置按钮的点击事件
-        buttonNfcSetting.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_NFC_SETTINGS)));
+        binding.buttonNfcSetting.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_NFC_SETTINGS)));
     }
 
     @Override
     public void onConnectionStatusChanged(boolean isConnected) {
         runOnUiThread(() -> {
-            buttonConnectServer.setText(isConnected ? "断开连接" : "连接服务器");
-            buttonConnectServer.setIcon(ContextCompat.getDrawable(this, isConnected ? R.drawable.ic_connect_server_close : R.drawable.ic_connect_server));
+            binding.buttonConnectServer.setText(isConnected ? "断开连接" : "连接服务器");
+            binding.buttonConnectServer.setIcon(ContextCompat.getDrawable(this, isConnected ? R.drawable.ic_connect_server_close : R.drawable.ic_connect_server));
         });
-        runOnUiThread(() -> textViewServerConnectionStatus.setText(isConnected ? "已连接" : "已断开"));
+        runOnUiThread(() -> binding.textviewServerConnectionStatus.setText(isConnected ? "已连接" : "已断开"));
     }
 
     @Override
     public void onMessageReceived(final String message) {
         // 确保在主线程上运行
-        runOnUiThread(() -> {
-            TextView textViewServerResponse = findViewById(R.id.textview_server_response);
-            textViewServerResponse.setText(message);
-        });
+        runOnUiThread(() -> binding.textviewServerResponse.setText(message));
     }
 
     @Override
     public void onTagDiscovered(String cardType, String cardNumber) {
         // 显示卡片类型和卡号
-        textViewCardType.setText("卡片类型: " + cardType);
-        textViewCardNumber.setText("卡号: " + cardNumber);
-        SpiceClient.getInstance().sendCardId(cardNumber, String.valueOf(editTextPassword.getText()));
+        binding.textviewCardType.setText("卡片类型: " + cardType);
+        binding.textviewCardNumber.setText("卡号: " + cardNumber);
+        SpiceClient.getInstance().sendCardId(cardNumber, String.valueOf(binding.edittextPassword.getText()));
     }
 
     @Override
@@ -140,27 +111,27 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
                 switch (state) {
                     case NfcAdapter.STATE_OFF:
                         // NFC已关闭
-                        progressBarNfcDelay.setVisibility(View.GONE);
-                        buttonNfcSetting.setVisibility(View.VISIBLE);
-                        textviewNfcStatus.setText("NFC已关闭");
+                        binding.progressbarNfcDelay.setVisibility(View.GONE);
+                        binding.buttonNfcSetting.setVisibility(View.VISIBLE);
+                        binding.textviewNfcStatus.setText("NFC已关闭");
                         break;
                     case NfcAdapter.STATE_TURNING_OFF:
                         // NFC正在关闭
-                        progressBarNfcDelay.setVisibility(View.VISIBLE);
-                        buttonNfcSetting.setVisibility(View.GONE);
-                        textviewNfcStatus.setText("NFC正在关闭");
+                        binding.progressbarNfcDelay.setVisibility(View.VISIBLE);
+                        binding.buttonNfcSetting.setVisibility(View.GONE);
+                        binding.textviewNfcStatus.setText("NFC正在关闭");
                         break;
                     case NfcAdapter.STATE_ON:
                         // NFC已开启
-                        progressBarNfcDelay.setVisibility(View.GONE);
-                        buttonNfcSetting.setVisibility(View.GONE);
-                        textviewNfcStatus.setText("NFC已开启");
+                        binding.progressbarNfcDelay.setVisibility(View.GONE);
+                        binding.buttonNfcSetting.setVisibility(View.GONE);
+                        binding.textviewNfcStatus.setText("NFC已开启");
                         break;
                     case NfcAdapter.STATE_TURNING_ON:
                         // NFC正在开启
-                        progressBarNfcDelay.setVisibility(View.VISIBLE);
-                        buttonNfcSetting.setVisibility(View.GONE);
-                        textviewNfcStatus.setText("NFC正在开启");
+                        binding.progressbarNfcDelay.setVisibility(View.VISIBLE);
+                        binding.buttonNfcSetting.setVisibility(View.GONE);
+                        binding.textviewNfcStatus.setText("NFC正在开启");
                         break;
                 }
             }
