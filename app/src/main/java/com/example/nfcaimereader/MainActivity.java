@@ -1,7 +1,5 @@
 package com.example.nfcaimereader;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
@@ -18,24 +16,26 @@ import com.example.nfcaimereader.Controllers.EditableHostnameAndPort;
 import com.example.nfcaimereader.Services.NfcEventListener;
 import com.example.nfcaimereader.Services.NfcHandler;
 import com.example.nfcaimereader.Services.NfcHelper;
+import com.example.nfcaimereader.Services.NfcStateReceiver;
 import com.example.nfcaimereader.databinding.ActivityMainBinding;
 
-public class MainActivity extends AppCompatActivity implements SpiceClient.ConnectionStatusCallback, NfcEventListener {
+public class MainActivity extends AppCompatActivity implements NfcStateReceiver.NfcStateChangeListener, SpiceClient.ConnectionStatusCallback, NfcEventListener {
+    // NFC状态变化
+    private NfcStateReceiver nfcStateReceiver;
+
     // NFC初始化
     private NfcHelper nfcHelper;
     private NfcHandler nfcHandler;
 
+    // viewBinding
     private ActivityMainBinding binding;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
-        // 检测NFC状态
-        IntentFilter filter = new IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
-        this.registerReceiver(mReceiver, filter);
 
         NfcAdapter adapter = NfcAdapter.getDefaultAdapter(this);
         if (adapter != null && adapter.isEnabled()) {
@@ -47,6 +47,12 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
             binding.buttonNfcSetting.setVisibility(View.VISIBLE);
             binding.textviewNfcStatus.setText("NFC已关闭");
         }
+
+        // 初始化BroadcastReceiver
+        nfcStateReceiver = new NfcStateReceiver(this);
+        // 注册BroadcastReceiver
+        IntentFilter filter = new IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
+        this.registerReceiver(nfcStateReceiver, filter);
 
         // NFC初始化
         nfcHelper = new NfcHelper(this);
@@ -60,6 +66,37 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
 
         // 设置NFC设置按钮的点击事件
         binding.buttonNfcSetting.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_NFC_SETTINGS)));
+    }
+
+    @Override
+    public void onNfcStateChanged(int state) {
+        // 处理NFC状态变化
+        switch (state) {
+            case NfcAdapter.STATE_OFF:
+                // NFC已关闭
+                binding.progressbarNfcDelay.setVisibility(View.GONE);
+                binding.buttonNfcSetting.setVisibility(View.VISIBLE);
+                binding.textviewNfcStatus.setText("NFC已关闭");
+                break;
+            case NfcAdapter.STATE_TURNING_OFF:
+                // NFC正在关闭
+                binding.progressbarNfcDelay.setVisibility(View.VISIBLE);
+                binding.buttonNfcSetting.setVisibility(View.GONE);
+                binding.textviewNfcStatus.setText("NFC正在关闭");
+                break;
+            case NfcAdapter.STATE_ON:
+                // NFC已开启
+                binding.progressbarNfcDelay.setVisibility(View.GONE);
+                binding.buttonNfcSetting.setVisibility(View.GONE);
+                binding.textviewNfcStatus.setText("NFC已开启");
+                break;
+            case NfcAdapter.STATE_TURNING_ON:
+                // NFC正在开启
+                binding.progressbarNfcDelay.setVisibility(View.VISIBLE);
+                binding.buttonNfcSetting.setVisibility(View.GONE);
+                binding.textviewNfcStatus.setText("NFC正在开启");
+                break;
+        }
     }
 
     @Override
@@ -102,41 +139,6 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
         nfcHelper.enableNfcScan(this);
     }
 
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-            if (NfcAdapter.ACTION_ADAPTER_STATE_CHANGED.equals(action)) {
-                final int state = intent.getIntExtra(NfcAdapter.EXTRA_ADAPTER_STATE, NfcAdapter.STATE_OFF);
-                switch (state) {
-                    case NfcAdapter.STATE_OFF:
-                        // NFC已关闭
-                        binding.progressbarNfcDelay.setVisibility(View.GONE);
-                        binding.buttonNfcSetting.setVisibility(View.VISIBLE);
-                        binding.textviewNfcStatus.setText("NFC已关闭");
-                        break;
-                    case NfcAdapter.STATE_TURNING_OFF:
-                        // NFC正在关闭
-                        binding.progressbarNfcDelay.setVisibility(View.VISIBLE);
-                        binding.buttonNfcSetting.setVisibility(View.GONE);
-                        binding.textviewNfcStatus.setText("NFC正在关闭");
-                        break;
-                    case NfcAdapter.STATE_ON:
-                        // NFC已开启
-                        binding.progressbarNfcDelay.setVisibility(View.GONE);
-                        binding.buttonNfcSetting.setVisibility(View.GONE);
-                        binding.textviewNfcStatus.setText("NFC已开启");
-                        break;
-                    case NfcAdapter.STATE_TURNING_ON:
-                        // NFC正在开启
-                        binding.progressbarNfcDelay.setVisibility(View.VISIBLE);
-                        binding.buttonNfcSetting.setVisibility(View.GONE);
-                        binding.textviewNfcStatus.setText("NFC正在开启");
-                        break;
-                }
-            }
-        }
-    };
 
     @Override
     protected void onPause() {
@@ -147,7 +149,8 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        this.unregisterReceiver(mReceiver);
+        // 注销BroadcastReceiver
+        this.unregisterReceiver(nfcStateReceiver);
         // 关闭WebSocket连接
         SpiceClient.getInstance().closeWebSocket();
     }
