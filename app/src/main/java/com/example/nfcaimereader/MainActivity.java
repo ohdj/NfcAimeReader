@@ -6,8 +6,13 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -18,6 +23,7 @@ import com.example.nfcaimereader.Services.NfcHandler;
 import com.example.nfcaimereader.Services.NfcHelper;
 import com.example.nfcaimereader.Services.NfcStateReceiver;
 import com.example.nfcaimereader.databinding.ActivityMainBinding;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class MainActivity extends AppCompatActivity implements NfcStateReceiver.NfcStateChangeListener, SpiceClient.ConnectionStatusCallback, NfcEventListener {
     // NFC状态变化
@@ -66,6 +72,79 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
 
         // 设置NFC设置按钮的点击事件
         binding.buttonNfcSetting.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_NFC_SETTINGS)));
+
+        showEditServerDialog();
+    }
+
+    public void showEditServerDialog() {
+        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setTitle("Add Server")
+                .setView(R.layout.dialog_server_edit)
+                .setNeutralButton("取消", (dialog12, which) -> dialog12.dismiss())
+                .setPositiveButton("保存", null)
+                .setCancelable(false)
+                .create();
+
+        dialog.setOnShowListener(dialogInterface -> {
+            Button saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            EditText editTextHostname = dialog.findViewById(R.id.edittext_hostname);
+            EditText editTextPort = dialog.findViewById(R.id.edittext_port);
+
+            // 初始时禁用保存按钮
+            saveButton.setEnabled(false);
+
+            // 创建TextWatcher来检查用户输入值是否符合保存服务器的条件
+            TextWatcher watcher = new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    boolean hostnameIsEmpty = editTextHostname.getText().toString().isEmpty();
+                    boolean portIsEmpty = editTextPort.getText().toString().isEmpty();
+
+                    if (hostnameIsEmpty || portIsEmpty) {
+                        saveButton.setEnabled(false);
+                        return;
+                    }
+                /*
+                    ^
+                    (
+                        0                   # 匹配0
+                    |
+                        (?!0)[0-9]{1,4}     # 匹配1到9999之间的任意数字且首位不能为0；其中{1,4}表示长度为1到4的数字串
+                    |
+                        [1-5][0-9]{4}       # 匹配10000到59999之间的数字；首位为1-5，其余为0-9的四位数
+                    |
+                        6[0-4][0-9]{3}      # 匹配60000到64999之间的数字；首位为6，第二位为0-4，后跟任意三位数字
+                    |
+                        65[0-4][0-9]{2}     # 匹配65000到65499之间的数字；前两位为65，第三位为0-4，后跟任意两位数字
+                    |
+                        655[0-2][0-9]       # 匹配65500到65529之间的数字；前三位为655，第四位为0-2，后跟任意一位数字
+                    |
+                        6553[0-5]           # 匹配65530到65535之间的数字；前四位为6553，最后一位为0-5之间的数字
+                    )
+                    $
+                */
+                    // 匹配从0到65535之间的数字，用于验证端口号
+                    final String PORT_PATTERN = "^(0|(?!0)[0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$";
+
+                    String portString = editTextPort.getText().toString();
+                    saveButton.setEnabled(portString.matches(PORT_PATTERN));
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                }
+            };
+
+            // 给EditText添加监听
+            editTextHostname.addTextChangedListener(watcher);
+            editTextPort.addTextChangedListener(watcher);
+        });
+
+        dialog.show();
     }
 
     @Override
