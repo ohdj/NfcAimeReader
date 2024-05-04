@@ -7,37 +7,25 @@
     android:orientation="vertical"
     android:padding="20dp">
 
-    <EditText
-        android:id="@+id/edittext_hostname"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:hint="Hostname"
-        android:importantForAutofill="no"
-        android:inputType="text" />
-
-    <EditText
-        android:id="@+id/edittext_port"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:hint="Port"
-        android:importantForAutofill="no"
-        android:inputType="number" />
-
-    <EditText
-        android:id="@+id/edittext_password"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:hint="Password (optional)"
-        android:importantForAutofill="no"
-        android:inputType="text" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_control_edit_text"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="保存"
-        app:icon="@drawable/ic_editor_save" />
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textview_server_address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nothing here..." />
+
+        <Button
+            android:id="@+id/button_setting_server"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="设定服务器" />
+    </LinearLayout>
 
     <com.google.android.material.divider.MaterialDivider
         android:layout_width="match_parent"

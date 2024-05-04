@@ -1,7 +1,9 @@
 package com.example.nfcaimereader;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
@@ -11,13 +13,13 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.example.nfcaimereader.Client.SpiceClient;
-import com.example.nfcaimereader.Controllers.EditableHostnameAndPort;
 import com.example.nfcaimereader.Services.NfcEventListener;
 import com.example.nfcaimereader.Services.NfcHandler;
 import com.example.nfcaimereader.Services.NfcHelper;
@@ -64,23 +66,50 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
         nfcHelper = new NfcHelper(this);
         nfcHandler = new NfcHandler(this);
 
-        // 编辑服务器按钮
-        new EditableHostnameAndPort(this);
-
         // WebSocket回调
         SpiceClient.getInstance().setConnectionStatusCallback(this);
 
         // 设置NFC设置按钮的点击事件
         binding.buttonNfcSetting.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_NFC_SETTINGS)));
 
-        showEditServerDialog();
+        binding.buttonSettingServer.setOnClickListener(v -> handleConnectButtonClick());
+
+        loadHostnameAndPort();
     }
 
-    public void showEditServerDialog() {
+    private void handleConnectButtonClick() {
+        String buttonText = binding.buttonSettingServer.getText().toString();
+        switch (buttonText) {
+            case "设定服务器":
+                showEditServerDialog(false);
+                break;
+            case "编辑":
+                showEditServerDialog(true);
+                break;
+        }
+    }
+
+    private void loadHostnameAndPort() {
+        SharedPreferences sharedPref = this.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+        String hostname = sharedPref.getString("hostname", "");
+        String port = sharedPref.getString("port", "");
+
+        // 判断 SharedPreferences 中是否有保存的值
+        boolean hasSavedValues = !hostname.isEmpty() && !port.isEmpty();
+
+        // 如果有保存的值，设置按钮文本为“编辑”，否则保持为“保存”
+        if (hasSavedValues) {
+            binding.buttonSettingServer.setText("编辑");
+            binding.textviewServerAddress.setText(hostname + ":" + port);
+            Toast.makeText(this, "已读取之前保存的服务器", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showEditServerDialog(boolean isEdit) {
         AlertDialog dialog = new MaterialAlertDialogBuilder(this)
-                .setTitle("Add Server")
+                .setTitle(isEdit ? "编辑服务器" : "设定服务器")
                 .setView(R.layout.dialog_server_edit)
-                .setNeutralButton("取消", (dialog12, which) -> dialog12.dismiss())
+                .setNegativeButton("取消", null)
                 .setPositiveButton("保存", null)
                 .setCancelable(false)
                 .create();
@@ -90,8 +119,17 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
             EditText editTextHostname = dialog.findViewById(R.id.edittext_hostname);
             EditText editTextPort = dialog.findViewById(R.id.edittext_port);
 
-            // 初始时禁用保存按钮
-            saveButton.setEnabled(false);
+            // 如果是“编辑”状态，就加载存储的值
+            if (isEdit) {
+                SharedPreferences sharedPref = MainActivity.this.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+                String savedHostname = sharedPref.getString("hostname", "");
+                String savedPort = sharedPref.getString("port", "");
+                editTextHostname.setText(savedHostname);
+                editTextPort.setText(savedPort);
+            } else {
+                // 如果是“设定服务器”状态，则禁用保存按钮
+                saveButton.setEnabled(false);
+            }
 
             // 创建TextWatcher来检查用户输入值是否符合保存服务器的条件
             TextWatcher watcher = new TextWatcher() {
@@ -101,13 +139,6 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    boolean hostnameIsEmpty = editTextHostname.getText().toString().isEmpty();
-                    boolean portIsEmpty = editTextPort.getText().toString().isEmpty();
-
-                    if (hostnameIsEmpty || portIsEmpty) {
-                        saveButton.setEnabled(false);
-                        return;
-                    }
                 /*
                     ^
                     (
@@ -130,8 +161,11 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
                     // 匹配从0到65535之间的数字，用于验证端口号
                     final String PORT_PATTERN = "^(0|(?!0)[0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$";
 
+                    String hostname = editTextHostname.getText().toString();
                     String portString = editTextPort.getText().toString();
-                    saveButton.setEnabled(portString.matches(PORT_PATTERN));
+                    boolean hostnameIsValid = !hostname.isEmpty();          // 确保hostname不为空
+                    boolean portIsValid = portString.matches(PORT_PATTERN); // 检查端口号是否有效
+                    saveButton.setEnabled(hostnameIsValid && portIsValid);  // 仅当hostname和端口号都有效时，才使保存按钮可点击
                 }
 
                 @Override
@@ -142,6 +176,26 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
             // 给EditText添加监听
             editTextHostname.addTextChangedListener(watcher);
             editTextPort.addTextChangedListener(watcher);
+
+            saveButton.setOnClickListener(view -> {
+                String hostname = editTextHostname.getText().toString();
+                String port = editTextPort.getText().toString();
+
+                // 保存到SharedPreferences
+                SharedPreferences sharedPref = MainActivity.this.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putString("hostname", hostname);
+                editor.putString("port", port);
+                editor.apply();
+
+                Toast.makeText(MainActivity.this, "已保存", Toast.LENGTH_SHORT).show();
+
+                binding.buttonSettingServer.setText("编辑");
+                binding.textviewServerAddress.setText(hostname + ":" + port);
+
+                // 关闭对话框
+                dialog.dismiss();
+            });
         });
 
         dialog.show();
@@ -198,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
         // 显示卡片类型和卡号
         binding.textviewCardType.setText("卡片类型: " + cardType);
         binding.textviewCardNumber.setText("卡号: " + cardNumber);
-        SpiceClient.getInstance().sendCardId(cardNumber, String.valueOf(binding.edittextPassword.getText()));
+        // SpiceClient.getInstance().sendCardId(cardNumber, String.valueOf(binding.edittextPassword.getText()));
     }
 
     @Override
