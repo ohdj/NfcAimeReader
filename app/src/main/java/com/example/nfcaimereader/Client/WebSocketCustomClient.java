@@ -1,7 +1,5 @@
 package com.example.nfcaimereader.Client;
 
-import com.example.nfcaimereader.Client.Utils.RC4;
-
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 

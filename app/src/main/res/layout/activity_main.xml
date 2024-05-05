@@ -7,25 +7,18 @@
     android:orientation="vertical"
     android:padding="20dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/textview_server_address"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal">
+        android:text="Nothing here..." />
 
-        <TextView
-            android:id="@+id/textview_server_address"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Nothing here..." />
-
-        <Button
-            android:id="@+id/button_setting_server"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="设定服务器" />
-    </LinearLayout>
+    <Button
+        android:id="@+id/button_setting_server"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="设定服务器" />
 
     <com.google.android.material.divider.MaterialDivider
         android:layout_width="match_parent"

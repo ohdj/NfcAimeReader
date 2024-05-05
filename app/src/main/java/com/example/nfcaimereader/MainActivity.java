@@ -3,7 +3,6 @@ package com.example.nfcaimereader;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
@@ -24,6 +23,7 @@ import com.example.nfcaimereader.Services.NfcEventListener;
 import com.example.nfcaimereader.Services.NfcHandler;
 import com.example.nfcaimereader.Services.NfcHelper;
 import com.example.nfcaimereader.Services.NfcStateReceiver;
+import com.example.nfcaimereader.Utils.AppSetting;
 import com.example.nfcaimereader.databinding.ActivityMainBinding;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
     // viewBinding
     private ActivityMainBinding binding;
 
+    private AppSetting appSetting;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,15 +70,20 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
         // WebSocket回调
         SpiceClient.getInstance().setConnectionStatusCallback(this);
 
-        // 设置NFC设置按钮的点击事件
+        // 去开启NFC按钮
         binding.buttonNfcSetting.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_NFC_SETTINGS)));
 
-        binding.buttonSettingServer.setOnClickListener(v -> handleConnectButtonClick());
+        // 编辑服务器按钮
+        binding.buttonSettingServer.setOnClickListener(v -> handleSettingButtonClick());
 
+        // 连接服务器按钮
+        binding.buttonConnectServer.setOnClickListener(v -> handleConnectButtonClick());
+
+        appSetting = new AppSetting(this);
         loadHostnameAndPort();
     }
 
-    private void handleConnectButtonClick() {
+    private void handleSettingButtonClick() {
         String buttonText = binding.buttonSettingServer.getText().toString();
         switch (buttonText) {
             case "设定服务器":
@@ -90,17 +96,13 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
     }
 
     private void loadHostnameAndPort() {
-        SharedPreferences sharedPref = this.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
-        String hostname = sharedPref.getString("hostname", "");
-        String port = sharedPref.getString("port", "");
+        String hostname = appSetting.getHostname();
+        String port = appSetting.getPort();
+        String password = appSetting.getPassword();
 
-        // 判断 SharedPreferences 中是否有保存的值
-        boolean hasSavedValues = !hostname.isEmpty() && !port.isEmpty();
-
-        // 如果有保存的值，设置按钮文本为“编辑”，否则保持为“保存”
-        if (hasSavedValues) {
+        if (appSetting.hasServerSettings()) {
             binding.buttonSettingServer.setText("编辑");
-            binding.textviewServerAddress.setText(hostname + ":" + port);
+            binding.textviewServerAddress.setText(hostname + ":" + port + "（是否启用加密传输）: " + !password.isEmpty());
             Toast.makeText(this, "已读取之前保存的服务器", Toast.LENGTH_SHORT).show();
         }
     }
@@ -118,14 +120,16 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
             Button saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
             EditText editTextHostname = dialog.findViewById(R.id.edittext_hostname);
             EditText editTextPort = dialog.findViewById(R.id.edittext_port);
+            EditText editTextPassword = dialog.findViewById(R.id.edittext_password);
 
             // 如果是“编辑”状态，就加载存储的值
             if (isEdit) {
-                SharedPreferences sharedPref = MainActivity.this.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
-                String savedHostname = sharedPref.getString("hostname", "");
-                String savedPort = sharedPref.getString("port", "");
+                String savedHostname = appSetting.getHostname();
+                String savedPort = appSetting.getPort();
+                String savePassword = appSetting.getPassword();
                 editTextHostname.setText(savedHostname);
                 editTextPort.setText(savedPort);
+                editTextPassword.setText(savePassword);
             } else {
                 // 如果是“设定服务器”状态，则禁用保存按钮
                 saveButton.setEnabled(false);
@@ -180,18 +184,15 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
             saveButton.setOnClickListener(view -> {
                 String hostname = editTextHostname.getText().toString();
                 String port = editTextPort.getText().toString();
+                String password = editTextPassword.getText().toString();
 
                 // 保存到SharedPreferences
-                SharedPreferences sharedPref = MainActivity.this.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPref.edit();
-                editor.putString("hostname", hostname);
-                editor.putString("port", port);
-                editor.apply();
+                appSetting.saveServerSettings(hostname, port, password);
 
                 Toast.makeText(MainActivity.this, "已保存", Toast.LENGTH_SHORT).show();
 
                 binding.buttonSettingServer.setText("编辑");
-                binding.textviewServerAddress.setText(hostname + ":" + port);
+                binding.textviewServerAddress.setText(hostname + ":" + port + "（是否启用加密传输）: " + !password.isEmpty());
 
                 // 关闭对话框
                 dialog.dismiss();
@@ -199,6 +200,24 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
         });
 
         dialog.show();
+    }
+
+    private void handleConnectButtonClick() {
+        String buttonText = binding.buttonConnectServer.getText().toString();
+        switch (buttonText) {
+            case "连接服务器":
+                String hostname = appSetting.getHostname();
+                String port = appSetting.getPort();
+                String password = appSetting.getPassword();
+
+                // 开始WebSocket连接
+                SpiceClient.getInstance().connectWebSocket("ws://" + hostname + ":" + port, password);
+                break;
+            case "断开连接":
+                // 断开WebSocket连接
+                SpiceClient.getInstance().closeWebSocket();
+                break;
+        }
     }
 
     @Override
@@ -252,7 +271,7 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
         // 显示卡片类型和卡号
         binding.textviewCardType.setText("卡片类型: " + cardType);
         binding.textviewCardNumber.setText("卡号: " + cardNumber);
-        // SpiceClient.getInstance().sendCardId(cardNumber, String.valueOf(binding.edittextPassword.getText()));
+        SpiceClient.getInstance().sendCardId(cardNumber, appSetting.getPassword());
     }
 
     @Override
