@@ -3,12 +3,16 @@ package com.example.nfcaimereader;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.Editable;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -257,7 +261,23 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
             binding.buttonConnectServer.setText(isConnected ? "断开连接" : "连接服务器");
             binding.buttonConnectServer.setIcon(ContextCompat.getDrawable(this, isConnected ? R.drawable.ic_connect_server_close : R.drawable.ic_connect_server));
         });
-        runOnUiThread(() -> binding.textviewServerConnectionStatus.setText(isConnected ? "已连接" : "已断开"));
+        runOnUiThread(() -> {
+            String connectionStatus;
+            int color;
+            if (isConnected) {
+                connectionStatus = "已连接 ✓";
+                color = Color.GREEN;
+            } else {
+                connectionStatus = "已断开 ×";
+                color = Color.RED;
+            }
+
+            SpannableString spannableString = new SpannableString(connectionStatus);
+            ForegroundColorSpan colorSpan = new ForegroundColorSpan(color);
+            spannableString.setSpan(colorSpan, connectionStatus.length() - 1, connectionStatus.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            binding.textviewServerConnectionStatus.setText(spannableString);
+        });
     }
 
     @Override
