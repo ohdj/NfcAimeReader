@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">NfcAimeReader</string>
+    <string-array name="mode_array">
+        <item>NFC读取卡片模式</item>
+        <item>手动输入卡号模式</item>
+    </string-array>
 </resources>

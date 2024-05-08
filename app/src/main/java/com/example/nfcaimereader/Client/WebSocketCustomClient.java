@@ -1,10 +1,12 @@
 package com.example.nfcaimereader.Client;
 
+import com.example.nfcaimereader.Client.Utils.RC4;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 public class WebSocketCustomClient extends WebSocketClient {
     private final SpiceClient.ConnectionStatusCallback callback;
@@ -32,13 +34,13 @@ public class WebSocketCustomClient extends WebSocketClient {
         // 接收到二进制消息时触发
         try {
             byte[] message;
-            // if (password == null || password.isEmpty()) {
+            if (password == null || password.isEmpty()) {
                 message = bytes.array();
-            // } else {
-            //     RC4 rc4 = new RC4(password.getBytes());
-            //     message = rc4.encrypt(bytes.array());
-            // }
-            String json = new String(message, "UTF-8");
+            } else {
+                RC4 rc4 = new RC4(password.getBytes());
+                message = rc4.encrypt(bytes.array());
+            }
+            String json = new String(message, StandardCharsets.UTF_8);
             SpiceClient.getInstance().updateWebSocketResponse("WebSocket接收到二进制消息: " + json);
         } catch (Exception e) {
             SpiceClient.getInstance().updateWebSocketResponse("WebSocket解密出错" + e);

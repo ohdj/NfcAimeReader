@@ -13,6 +13,8 @@ import android.text.Spanned;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -30,6 +32,9 @@ import com.example.nfcaimereader.Utils.AppSetting;
 import com.example.nfcaimereader.databinding.ActivityMainBinding;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import java.util.ArrayList;
+import java.util.Set;
+
 public class MainActivity extends AppCompatActivity implements NfcStateReceiver.NfcStateChangeListener, SpiceClient.ConnectionStatusCallback, NfcEventListener {
     // NFC状态变化
     private NfcStateReceiver nfcStateReceiver;
@@ -42,6 +47,9 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
     private ActivityMainBinding binding;
 
     private AppSetting appSetting;
+
+    ArrayAdapter<String> arrayAdapter;
+    Set<String> cardNumbers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +92,68 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
 
         appSetting = new AppSetting(this);
         loadHostnameAndPort();
+
+        binding.spinnerSelectMode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                switch (position) {
+                    case 0:
+                        binding.cardInput.setVisibility(View.GONE);
+                        break;
+                    case 1:
+                        binding.cardInput.setVisibility(View.VISIBLE);
+                        break;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        cardNumbers = appSetting.getCardNumbers(); // 获取卡号列表
+
+        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, new ArrayList<>(cardNumbers));
+        binding.listviewCardNumbers.setAdapter(arrayAdapter);
+
+        binding.buttonSaveCardNumber.setOnClickListener(v -> {
+            String cardNumber = binding.edittextCardNumber.getText().toString();
+            appSetting.saveCardNumber(cardNumber); // 保存卡号到列表
+            updateCardList();
+            Toast.makeText(MainActivity.this, "卡号已保存", Toast.LENGTH_SHORT).show();
+        });
+
+        binding.listviewCardNumbers.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedCardNumber = arrayAdapter.getItem(position);
+            // 发送选择的卡号到WebSocket服务器
+            SpiceClient.getInstance().sendCardId(selectedCardNumber, appSetting.getPassword());
+        });
+
+        binding.listviewCardNumbers.setOnItemLongClickListener((parent, view, position, id) -> {
+            String selectedCardNumber = arrayAdapter.getItem(position);
+            showDeleteConfirmationDialog(selectedCardNumber);
+            return true;
+        });
+    }
+
+    private void updateCardList() {
+        cardNumbers = appSetting.getCardNumbers();
+        arrayAdapter.clear();
+        arrayAdapter.addAll(cardNumbers);
+        arrayAdapter.notifyDataSetChanged();
+    }
+
+    // 删除卡号确认
+    private void showDeleteConfirmationDialog(String cardNumber) {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("删除卡号")
+                .setMessage("您确定要删除\"" + cardNumber + "\"这个卡号吗?")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("删除", (dialog, which) -> {
+                    appSetting.deleteCardNumber(cardNumber);
+                    updateCardList();
+                })
+                .show();
     }
 
     private void handleSettingButtonClick() {
