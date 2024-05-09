@@ -134,6 +134,42 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
             showDeleteConfirmationDialog(selectedCardNumber);
             return true;
         });
+
+        binding.edittextCardNumber.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String input = s.toString().toUpperCase();
+                binding.textviewInputStatus.setText(input.length() + "/16");
+
+                boolean validLength = input.length() == 16;
+
+                if (validLength) {
+                    binding.textviewInputStatus.setTextColor(Color.BLACK);
+                } else {
+                    binding.textviewInputStatus.setTextColor(Color.RED);
+                }
+
+                // 检查输入是否只包含十六进制允许的字符
+                boolean validHex = input.matches("[0-9A-F]*");
+
+                if (validHex) {
+                    binding.textviewInputHint.setTextColor(Color.BLACK);
+                } else {
+                    binding.textviewInputHint.setTextColor(Color.RED);
+                }
+
+                binding.buttonSaveCardNumber.setEnabled(validLength && validHex);
+            }
+        });
+
     }
 
     private void updateCardList() {

@@ -98,15 +98,31 @@
 
     <LinearLayout
         android:id="@+id/card_input"
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
         <EditText
             android:id="@+id/edittext_card_number"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="请输入卡号"
-            android:inputType="number" />
+            android:inputType="textCapCharacters"
+            android:maxLength="16" />
+
+        <TextView
+            android:id="@+id/textview_input_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0/16"
+            android:textColor="#FF0000" />
+
+        <TextView
+            android:id="@+id/textview_input_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="十六进制（只含有[0123456789ABCDEF]）"
+            android:textColor="#FF0000" />
 
         <Button
             android:id="@+id/button_save_card_number"
