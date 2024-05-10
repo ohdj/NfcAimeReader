@@ -121,14 +121,25 @@
             android:id="@+id/textview_input_hint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="十六进制（只含有[0123456789ABCDEF]）"
-            android:textColor="#FF0000" />
+            android:text="十六进制（只含有[0123456789ABCDEF]）" />
 
-        <Button
-            android:id="@+id/button_save_card_number"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="保存" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/button_save_card_number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="保存" />
+
+            <Button
+                android:id="@+id/button_pad_input"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="自动补齐卡号" />
+        </LinearLayout>
 
         <ListView
             android:id="@+id/listview_card_numbers"

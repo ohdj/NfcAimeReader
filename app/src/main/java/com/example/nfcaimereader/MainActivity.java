@@ -167,9 +167,22 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
                 }
 
                 binding.buttonSaveCardNumber.setEnabled(validLength && validHex);
+                binding.buttonPadInput.setEnabled(!validLength && validHex);
             }
         });
 
+        binding.buttonPadInput.setOnClickListener(v -> {
+            String currentInput = binding.edittextCardNumber.getText().toString().toUpperCase();
+
+            // 检查输入是否为合法的十六进制
+            boolean isHex = currentInput.matches("[0-9A-F]+") || currentInput.isEmpty();
+            if (isHex && currentInput.length() < 16) {
+                // 补足0到开头直到长度为16
+                String paddedInput = String.format("%" + 16 + "s", currentInput).replace(' ', '0');
+                binding.edittextCardNumber.setText(paddedInput);
+                binding.edittextCardNumber.setSelection(paddedInput.length() - currentInput.length()); // 移动光标到补齐前的位置
+            }
+        });
     }
 
     private void updateCardList() {
