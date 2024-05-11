@@ -51,11 +51,21 @@
         android:layout_marginTop="10dp"
         android:layout_marginBottom="10dp" />
 
-    <Spinner
-        android:id="@+id/spinner_select_mode"
-        android:layout_width="wrap_content"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/menu"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:entries="@array/mode_array" />
+        android:hint="卡号检测方式">
+
+        <AutoCompleteTextView
+            android:id="@+id/autocomplete_textview_list_item"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none"
+            android:text="NFC读取"
+            app:simpleItems="@array/mode_array" />
+    </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -100,7 +110,8 @@
         android:id="@+id/card_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:visibility="gone">
 
         <EditText
             android:id="@+id/edittext_card_number"

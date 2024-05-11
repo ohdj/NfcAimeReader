@@ -93,21 +93,14 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
         appSetting = new AppSetting(this);
         loadHostnameAndPort();
 
-        binding.spinnerSelectMode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                switch (position) {
-                    case 0:
-                        binding.cardInput.setVisibility(View.GONE);
-                        break;
-                    case 1:
-                        binding.cardInput.setVisibility(View.VISIBLE);
-                        break;
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+        binding.autocompleteTextviewListItem.setOnItemClickListener((parent, view, position, id) -> {
+            switch (position) {
+                case 0:
+                    binding.cardInput.setVisibility(View.GONE);
+                    break;
+                case 1:
+                    binding.cardInput.setVisibility(View.VISIBLE);
+                    break;
             }
         });
 
