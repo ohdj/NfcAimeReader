@@ -13,7 +13,6 @@ import android.text.Spanned;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -188,8 +187,11 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
     // 删除卡号确认
     private void showDeleteConfirmationDialog(String cardNumber) {
         new MaterialAlertDialogBuilder(this)
-                .setTitle("删除卡号")
-                .setMessage("您确定要删除\"" + cardNumber + "\"这个卡号吗?")
+                .setTitle("卡号设置")
+                .setMessage(cardNumber + "要怎么做呢")
+                .setNeutralButton("编辑", (dialog, which) -> {
+
+                })
                 .setNegativeButton("取消", null)
                 .setPositiveButton("删除", (dialog, which) -> {
                     appSetting.deleteCardNumber(cardNumber);
