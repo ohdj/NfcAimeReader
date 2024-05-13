@@ -61,4 +61,16 @@ public class AppSetting {
         editor.putStringSet(KEY_CARD_NUMBERS, cardNumbers); // 重新保存修改后的集合
         editor.apply(); // 提交修改
     }
+
+    // 修改卡号
+    public void editCardNumber(String oldCardNumber, String newCardNumber) {
+        Set<String> cardNumbers = getCardNumbers();
+        if (cardNumbers.contains(oldCardNumber)) {
+            cardNumbers.remove(oldCardNumber); // 删除旧的卡号
+            cardNumbers.add(newCardNumber);    // 添加新的卡号
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putStringSet(KEY_CARD_NUMBERS, cardNumbers); // 保存变更
+            editor.apply();
+        }
+    }
 }

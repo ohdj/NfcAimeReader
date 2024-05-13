@@ -7,10 +7,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.text.Editable;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.TextWatcher;
+import android.text.*;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -189,14 +186,32 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
         new MaterialAlertDialogBuilder(this)
                 .setTitle("卡号设置")
                 .setMessage(cardNumber + "要怎么做呢")
-                .setNeutralButton("编辑", (dialog, which) -> {
-
-                })
+                .setNeutralButton("编辑", (dialog, which) -> showEditCardNumberDialog(cardNumber))
                 .setNegativeButton("取消", null)
                 .setPositiveButton("删除", (dialog, which) -> {
                     appSetting.deleteCardNumber(cardNumber);
                     updateCardList();
                 })
+                .show();
+    }
+
+    // 显示编辑卡号的对话框
+    private void showEditCardNumberDialog(String cardNumber) {
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setText(cardNumber);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("编辑卡号")
+                .setView(input)
+                .setPositiveButton("保存", (dialog, which) -> {
+                    String newCardNumber = input.getText().toString();
+                    if (!newCardNumber.isEmpty()) {
+                        appSetting.editCardNumber(cardNumber, newCardNumber);
+                        updateCardList();
+                    }
+                })
+                .setNegativeButton("取消", null)
                 .show();
     }
 
