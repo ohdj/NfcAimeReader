@@ -19,11 +19,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import androidx.lifecycle.ViewModelProvider;
+
 import com.example.nfcaimereader.Client.SpiceClient;
-import com.example.nfcaimereader.Services.NfcEventListener;
-import com.example.nfcaimereader.Services.NfcHandler;
-import com.example.nfcaimereader.Services.NfcHelper;
-import com.example.nfcaimereader.Services.NfcStateReceiver;
+import com.example.nfcaimereader.Services.*;
 import com.example.nfcaimereader.Utils.AppSetting;
 import com.example.nfcaimereader.databinding.ActivityMainBinding;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -31,13 +30,13 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import java.util.ArrayList;
 import java.util.Set;
 
-public class MainActivity extends AppCompatActivity implements NfcStateReceiver.NfcStateChangeListener, SpiceClient.ConnectionStatusCallback, NfcEventListener {
+public class MainActivity extends AppCompatActivity implements NfcStateReceiver.NfcStateChangeListener, SpiceClient.ConnectionStatusCallback {
     // NFC状态变化
     private NfcStateReceiver nfcStateReceiver;
 
     // NFC初始化
-    private NfcHelper nfcHelper;
-    private NfcHandler nfcHandler;
+    private NfcManager nfcManager;
+    private NfcViewModel nfcViewModel;
 
     // viewBinding
     private ActivityMainBinding binding;
@@ -52,6 +51,8 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        // SpiceClient.getInstance().sendCardId(cardNumber, appSetting.getPassword());
 
         NfcAdapter adapter = NfcAdapter.getDefaultAdapter(this);
         if (adapter != null && adapter.isEnabled()) {
@@ -71,8 +72,25 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
         this.registerReceiver(nfcStateReceiver, filter);
 
         // NFC初始化
-        nfcHelper = new NfcHelper(this);
-        nfcHandler = new NfcHandler(this);
+        nfcManager = new NfcManager(this);
+
+        // ViewModel 初始化（使用ViewModelProviders如果需要）
+        nfcViewModel = new ViewModelProvider(this).get(NfcViewModel.class);
+
+        // 观察NFC状态和标签信息
+        nfcViewModel.getNfcEnabled().observe(this, isEnabled -> {
+            // 根据是否启用NFC更新UI
+        });
+
+        nfcViewModel.getCardType().observe(this, type -> {
+            // 更新UI展示标签类型
+            binding.textviewCardType.setText("卡片类型: " + type);
+        });
+
+        nfcViewModel.getCardNumber().observe(this, number -> {
+            // 更新UI展示标签号码
+            binding.textviewCardNumber.setText("卡号: " + number);
+        });
 
         // WebSocket回调
         SpiceClient.getInstance().setConnectionStatusCallback(this);
@@ -354,6 +372,9 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
 
     @Override
     public void onNfcStateChanged(int state) {
+        // 更新ViewModel中的NFC状态
+        // boolean isEnabled = (state == NfcAdapter.STATE_ON);
+        // nfcViewModel.onNfcStateChanged(isEnabled);
         // 处理NFC状态变化
         switch (state) {
             case NfcAdapter.STATE_OFF:
@@ -415,35 +436,29 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
     }
 
     @Override
-    public void onTagDiscovered(String cardType, String cardNumber) {
-        // 显示卡片类型和卡号
-        binding.textviewCardType.setText("卡片类型: " + cardType);
-        binding.textviewCardNumber.setText("卡号: " + cardNumber);
-        SpiceClient.getInstance().sendCardId(cardNumber, appSetting.getPassword());
-    }
-
-    @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction())) {
-            Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-            if (tag != null) {
-                nfcHandler.processTag(tag);
-            }
+        Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        if (tag != null) {
+            nfcManager.processTag(tag, nfcViewModel);
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        nfcHelper.enableNfcScan(this);
+        if (nfcManager.isNfcSupported()) {
+            nfcManager.enableForegroundDispatch(this);
+        } else {
+            // 更新UI显示设备不支持NFC
+        }
     }
 
 
     @Override
     protected void onPause() {
         super.onPause();
-        nfcHelper.disableNfcScan(this);
+        nfcManager.disableForegroundDispatch(this);
     }
 
     @Override
