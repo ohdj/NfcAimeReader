@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.nfcaimereader.Client.SpiceClient;
+import com.example.nfcaimereader.Controllers.ServerSettingsDialog;
 import com.example.nfcaimereader.Services.*;
 import com.example.nfcaimereader.Utils.AppSetting;
 import com.example.nfcaimereader.databinding.ActivityMainBinding;
@@ -234,15 +235,18 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
     }
 
     private void handleSettingButtonClick() {
-        String buttonText = binding.buttonSettingServer.getText().toString();
-        switch (buttonText) {
-            case "设定服务器":
-                showEditServerDialog(false);
-                break;
-            case "编辑":
-                showEditServerDialog(true);
-                break;
-        }
+        ServerSettingsDialog.showEditServerDialog(this, appSetting, binding.buttonSettingServer.getText().equals("编辑"), new ServerSettingsDialog.ServerDialogListener() {
+            @Override
+            public void onSave(String hostname, String port, String password) {
+                // 保存设置到SharedPreferences
+                appSetting.saveServerSettings(hostname, port, password);
+                Toast.makeText(MainActivity.this, "已保存", Toast.LENGTH_SHORT).show();
+
+                // 更新UI
+                binding.buttonSettingServer.setText("编辑");
+                binding.textviewServerAddress.setText(String.format("%s:%s（是否启用加密传输）: %b", hostname, port, !password.isEmpty()));
+            }
+        });
     }
 
     private void loadHostnameAndPort() {
@@ -255,101 +259,6 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
             binding.textviewServerAddress.setText(hostname + ":" + port + "（是否启用加密传输）: " + !password.isEmpty());
             Toast.makeText(this, "已读取之前保存的服务器", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    private void showEditServerDialog(boolean isEdit) {
-        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
-                .setTitle(isEdit ? "编辑服务器" : "设定服务器")
-                .setView(R.layout.dialog_server_edit)
-                .setNegativeButton("取消", null)
-                .setPositiveButton("保存", null)
-                .setCancelable(false)
-                .create();
-
-        dialog.setOnShowListener(dialogInterface -> {
-            Button saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            EditText editTextHostname = dialog.findViewById(R.id.edittext_hostname);
-            EditText editTextPort = dialog.findViewById(R.id.edittext_port);
-            EditText editTextPassword = dialog.findViewById(R.id.edittext_password);
-
-            // 如果是“编辑”状态，就加载存储的值
-            if (isEdit) {
-                String savedHostname = appSetting.getHostname();
-                String savedPort = appSetting.getPort();
-                String savePassword = appSetting.getPassword();
-                editTextHostname.setText(savedHostname);
-                editTextPort.setText(savedPort);
-                editTextPassword.setText(savePassword);
-            } else {
-                // 如果是“设定服务器”状态，则禁用保存按钮
-                saveButton.setEnabled(false);
-            }
-
-            // 创建TextWatcher来检查用户输入值是否符合保存服务器的条件
-            TextWatcher watcher = new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                /*
-                    ^
-                    (
-                        0                   # 匹配0
-                    |
-                        (?!0)[0-9]{1,4}     # 匹配1到9999之间的任意数字且首位不能为0；其中{1,4}表示长度为1到4的数字串
-                    |
-                        [1-5][0-9]{4}       # 匹配10000到59999之间的数字；首位为1-5，其余为0-9的四位数
-                    |
-                        6[0-4][0-9]{3}      # 匹配60000到64999之间的数字；首位为6，第二位为0-4，后跟任意三位数字
-                    |
-                        65[0-4][0-9]{2}     # 匹配65000到65499之间的数字；前两位为65，第三位为0-4，后跟任意两位数字
-                    |
-                        655[0-2][0-9]       # 匹配65500到65529之间的数字；前三位为655，第四位为0-2，后跟任意一位数字
-                    |
-                        6553[0-5]           # 匹配65530到65535之间的数字；前四位为6553，最后一位为0-5之间的数字
-                    )
-                    $
-                */
-                    // 匹配从0到65535之间的数字，用于验证端口号
-                    final String PORT_PATTERN = "^(0|(?!0)[0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$";
-
-                    String hostname = editTextHostname.getText().toString();
-                    String portString = editTextPort.getText().toString();
-                    boolean hostnameIsValid = !hostname.isEmpty();          // 确保hostname不为空
-                    boolean portIsValid = portString.matches(PORT_PATTERN); // 检查端口号是否有效
-                    saveButton.setEnabled(hostnameIsValid && portIsValid);  // 仅当hostname和端口号都有效时，才使保存按钮可点击
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                }
-            };
-
-            // 给EditText添加监听
-            editTextHostname.addTextChangedListener(watcher);
-            editTextPort.addTextChangedListener(watcher);
-
-            saveButton.setOnClickListener(view -> {
-                String hostname = editTextHostname.getText().toString();
-                String port = editTextPort.getText().toString();
-                String password = editTextPassword.getText().toString();
-
-                // 保存到SharedPreferences
-                appSetting.saveServerSettings(hostname, port, password);
-
-                Toast.makeText(MainActivity.this, "已保存", Toast.LENGTH_SHORT).show();
-
-                binding.buttonSettingServer.setText("编辑");
-                binding.textviewServerAddress.setText(hostname + ":" + port + "（是否启用加密传输）: " + !password.isEmpty());
-
-                // 关闭对话框
-                dialog.dismiss();
-            });
-        });
-
-        dialog.show();
     }
 
     private void handleConnectButtonClick() {
