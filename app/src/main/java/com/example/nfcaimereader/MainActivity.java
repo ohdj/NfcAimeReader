@@ -100,7 +100,20 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
         binding.buttonNfcSetting.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_NFC_SETTINGS)));
 
         // 编辑服务器按钮
-        binding.buttonSettingServer.setOnClickListener(v -> handleSettingButtonClick());
+        binding.buttonSettingServer.setOnClickListener(v -> ServerSettingsDialog.showServerSettingsDialog(
+                this,
+                appSetting,
+                binding.buttonSettingServer.getText().equals("编辑"),
+                (hostname, port, password) -> {
+                    // 保存设置到SharedPreferences
+                    appSetting.saveServerSettings(hostname, port, password);
+                    Toast.makeText(MainActivity.this, "已保存", Toast.LENGTH_SHORT).show();
+
+                    // 更新UI
+                    binding.buttonSettingServer.setText("编辑");
+                    binding.textviewServerAddress.setText(String.format("%s:%s（是否启用加密传输）: %b", hostname, port, !password.isEmpty()));
+                }
+        ));
 
         // 连接服务器按钮
         binding.buttonConnectServer.setOnClickListener(v -> handleConnectButtonClick());
@@ -232,21 +245,6 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
                 })
                 .setNegativeButton("取消", null)
                 .show();
-    }
-
-    private void handleSettingButtonClick() {
-        ServerSettingsDialog.showEditServerDialog(this, appSetting, binding.buttonSettingServer.getText().equals("编辑"), new ServerSettingsDialog.ServerDialogListener() {
-            @Override
-            public void onSave(String hostname, String port, String password) {
-                // 保存设置到SharedPreferences
-                appSetting.saveServerSettings(hostname, port, password);
-                Toast.makeText(MainActivity.this, "已保存", Toast.LENGTH_SHORT).show();
-
-                // 更新UI
-                binding.buttonSettingServer.setText("编辑");
-                binding.textviewServerAddress.setText(String.format("%s:%s（是否启用加密传输）: %b", hostname, port, !password.isEmpty()));
-            }
-        });
     }
 
     private void loadHostnameAndPort() {

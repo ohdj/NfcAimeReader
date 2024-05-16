@@ -3,60 +3,67 @@ package com.example.nfcaimereader.Controllers;
 import android.content.Context;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+
 import androidx.appcompat.app.AlertDialog;
 import com.example.nfcaimereader.R;
 import com.example.nfcaimereader.Utils.AppSetting;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class ServerSettingsDialog {
-    public interface ServerDialogListener {
-        void onSave(String hostname, String port, String password);
-    }
 
-    public static void showEditServerDialog(Context context, AppSetting appSetting, boolean isEdit, ServerDialogListener listener) {
-        AlertDialog dialog = new MaterialAlertDialogBuilder(context)
+    public static void showServerSettingsDialog(Context context, AppSetting appSetting, boolean isEdit, final ServerDialogListener listener) {
+        LayoutInflater inflater = LayoutInflater.from(context);
+        View view = inflater.inflate(R.layout.server_settings_view, null);
+        EditText editTextHostname = view.findViewById(R.id.edittext_hostname);
+        EditText editTextPort = view.findViewById(R.id.edittext_port);
+        EditText editTextPassword = view.findViewById(R.id.edittext_password);
+
+        // 如果是“编辑”状态，就加载存储的值
+        if (isEdit && appSetting != null) {
+            editTextHostname.setText(appSetting.getHostname());
+            editTextPort.setText(appSetting.getPort());
+            editTextPassword.setText(appSetting.getPassword());
+        }
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context)
                 .setTitle(isEdit ? "编辑服务器" : "设定服务器")
-                .setView(R.layout.dialog_server_edit)
+                .setView(view)
                 .setNegativeButton("取消", null)
                 .setPositiveButton("保存", null)
-                .setCancelable(false)
-                .create();
+                .setCancelable(false);
+
+        final AlertDialog dialog = builder.create();
 
         dialog.setOnShowListener(dialogInterface -> {
-            Button saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            EditText editTextHostname = dialog.findViewById(R.id.edittext_hostname);
-            EditText editTextPort = dialog.findViewById(R.id.edittext_port);
-            EditText editTextPassword = dialog.findViewById(R.id.edittext_password);
+            Button buttonSave = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
 
-            // 如果是“编辑”状态，就加载存储的值
-            if (isEdit) {
-                String savedHostname = appSetting.getHostname();
-                String savedPort = appSetting.getPort();
-                String savePassword = appSetting.getPassword();
-                editTextHostname.setText(savedHostname);
-                editTextPort.setText(savedPort);
-                editTextPassword.setText(savePassword);
-            } else {
-                // 如果是“设定服务器”状态，则禁用保存按钮
-                saveButton.setEnabled(false);
+            // 如果处于“设定服务器”状态，禁用保存按钮
+            if (!isEdit) {
+                buttonSave.setEnabled(false);
             }
 
-            TextWatcher watcher = getTextWatcher(saveButton, editTextHostname, editTextPort);
-            // 给EditText添加监听
-            editTextHostname.addTextChangedListener(watcher);
-            editTextPort.addTextChangedListener(watcher);
+            TextWatcher textWatcher = getTextWatcher(buttonSave, editTextHostname, editTextPort);
 
-            saveButton.setOnClickListener(v -> {
+            // 给EditText添加监听
+            editTextHostname.addTextChangedListener(textWatcher);
+            editTextPort.addTextChangedListener(textWatcher);
+
+            buttonSave.setOnClickListener(v -> {
                 String hostname = editTextHostname.getText().toString();
                 String port = editTextPort.getText().toString();
                 String password = editTextPassword.getText().toString();
 
-                listener.onSave(hostname, port, password);
+                if (listener != null) {
+                    listener.onSave(hostname, port, password);
+                }
                 dialog.dismiss();
             });
         });
+
         dialog.show();
     }
 
@@ -102,5 +109,9 @@ public class ServerSettingsDialog {
             public void afterTextChanged(Editable s) {
             }
         };
+    }
+
+    public interface ServerDialogListener {
+        void onSave(String hostname, String port, String password);
     }
 }
