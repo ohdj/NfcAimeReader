@@ -7,7 +7,11 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.text.*;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -18,42 +22,48 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.nfcaimereader.Client.SpiceClient;
 import com.example.nfcaimereader.Controllers.ServerSettingsDialog;
-import com.example.nfcaimereader.Services.*;
+import com.example.nfcaimereader.Services.NfcManager;
+import com.example.nfcaimereader.Services.NfcViewModel;
 import com.example.nfcaimereader.Utils.AppSetting;
 import com.example.nfcaimereader.databinding.ActivityMainBinding;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.Set;
+public class MainActivity extends AppCompatActivity implements SpiceClient.ConnectionStatusCallback {
+    // ViewBinding和ViewModel
+    private ActivityMainBinding binding;
+    private NfcViewModel nfcViewModel;
 
-public class MainActivity extends AppCompatActivity implements NfcStateReceiver.NfcStateChangeListener, SpiceClient.ConnectionStatusCallback {
-    // NFC状态变化
-    private NfcStateReceiver nfcStateReceiver;
+    // NfcStateReceiver
+    private NfcViewModel.NfcStateReceiver nfcStateReceiver;
 
     // NFC初始化
     private NfcManager nfcManager;
-    private NfcViewModel nfcViewModel;
 
-    // viewBinding
-    private ActivityMainBinding binding;
-
+    // 永久化存储
     private AppSetting appSetting;
 
-    ArrayAdapter<String> arrayAdapter;
     Set<String> cardNumbers;
+    ArrayAdapter<String> arrayAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 绑定ViewBinding和ViewModel
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        nfcViewModel = new ViewModelProvider(this).get(NfcViewModel.class);
 
-        // SpiceClient.getInstance().sendCardId(cardNumber, appSetting.getPassword());
+        // 设置UI监听器
+        setupUIListeners();
+
+        // 观察LiveData对象
+        observeLiveData();
 
         NfcAdapter adapter = NfcAdapter.getDefaultAdapter(this);
         if (adapter != null && adapter.isEnabled()) {
@@ -66,36 +76,28 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
             binding.textviewNfcStatus.setText("NFC已关闭");
         }
 
-        // 初始化BroadcastReceiver
-        nfcStateReceiver = new NfcStateReceiver(this);
-        // 注册BroadcastReceiver
+        nfcStateReceiver = nfcViewModel.new NfcStateReceiver();
         IntentFilter filter = new IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
         this.registerReceiver(nfcStateReceiver, filter);
 
         // NFC初始化
         nfcManager = new NfcManager(this);
 
-        // ViewModel 初始化（使用ViewModelProviders如果需要）
-        nfcViewModel = new ViewModelProvider(this).get(NfcViewModel.class);
-
-        // 观察NFC状态和标签信息
-        nfcViewModel.getNfcEnabled().observe(this, isEnabled -> {
-            // 根据是否启用NFC更新UI
-        });
-
-        nfcViewModel.getCardType().observe(this, type -> {
-            // 更新UI展示标签类型
-            binding.textviewCardType.setText("卡片类型: " + type);
-        });
-
-        nfcViewModel.getCardNumber().observe(this, number -> {
-            // 更新UI展示标签号码
-            binding.textviewCardNumber.setText("卡号: " + number);
-        });
-
         // WebSocket回调
         SpiceClient.getInstance().setConnectionStatusCallback(this);
+        // SpiceClient.getInstance().sendCardId(cardNumber, appSetting.getPassword());
 
+        // 永久化存储
+        appSetting = new AppSetting(this);
+        loadHostnameAndPort();
+
+        // 卡号列表
+        cardNumbers = appSetting.getCardNumbers();
+        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, new ArrayList<>(cardNumbers));
+        binding.listviewCardNumbers.setAdapter(arrayAdapter);
+    }
+
+    private void setupUIListeners() {
         // 去开启NFC按钮
         binding.buttonNfcSetting.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_NFC_SETTINGS)));
 
@@ -118,9 +120,6 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
         // 连接服务器按钮
         binding.buttonConnectServer.setOnClickListener(v -> handleConnectButtonClick());
 
-        appSetting = new AppSetting(this);
-        loadHostnameAndPort();
-
         binding.autocompleteTextviewListItem.setOnItemClickListener((parent, view, position, id) -> {
             switch (position) {
                 case 0:
@@ -131,11 +130,6 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
                     break;
             }
         });
-
-        cardNumbers = appSetting.getCardNumbers(); // 获取卡号列表
-
-        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, new ArrayList<>(cardNumbers));
-        binding.listviewCardNumbers.setAdapter(arrayAdapter);
 
         binding.buttonSaveCardNumber.setOnClickListener(v -> {
             String cardNumber = binding.edittextCardNumber.getText().toString();
@@ -203,6 +197,48 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
                 binding.edittextCardNumber.setText(paddedInput);
                 binding.edittextCardNumber.setSelection(paddedInput.length() - currentInput.length()); // 移动光标到补齐前的位置
             }
+        });
+    }
+
+    private void observeLiveData() {
+        // 观察NFC状态
+        nfcViewModel.getNfcState().observe(this, state -> {
+            switch (state) {
+                case NfcAdapter.STATE_OFF:
+                    // NFC已关闭
+                    binding.progressbarNfcDelay.setVisibility(View.GONE);
+                    binding.buttonNfcSetting.setVisibility(View.VISIBLE);
+                    binding.textviewNfcStatus.setText("NFC已关闭");
+                    break;
+                case NfcAdapter.STATE_TURNING_OFF:
+                    // NFC正在关闭
+                    binding.progressbarNfcDelay.setVisibility(View.VISIBLE);
+                    binding.buttonNfcSetting.setVisibility(View.GONE);
+                    binding.textviewNfcStatus.setText("NFC正在关闭");
+                    break;
+                case NfcAdapter.STATE_ON:
+                    // NFC已开启
+                    binding.progressbarNfcDelay.setVisibility(View.GONE);
+                    binding.buttonNfcSetting.setVisibility(View.GONE);
+                    binding.textviewNfcStatus.setText("NFC已开启");
+                    break;
+                case NfcAdapter.STATE_TURNING_ON:
+                    // NFC正在开启
+                    binding.progressbarNfcDelay.setVisibility(View.VISIBLE);
+                    binding.buttonNfcSetting.setVisibility(View.GONE);
+                    binding.textviewNfcStatus.setText("NFC正在开启");
+                    break;
+            }
+        });
+
+        nfcViewModel.getCardType().observe(this, type -> {
+            // 更新UI展示标签类型
+            binding.textviewCardType.setText("卡片类型: " + type);
+        });
+
+        nfcViewModel.getCardNumber().observe(this, number -> {
+            // 更新UI展示标签号码
+            binding.textviewCardNumber.setText("卡号: " + number);
         });
     }
 
@@ -278,40 +314,6 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
     }
 
     @Override
-    public void onNfcStateChanged(int state) {
-        // 更新ViewModel中的NFC状态
-        // boolean isEnabled = (state == NfcAdapter.STATE_ON);
-        // nfcViewModel.onNfcStateChanged(isEnabled);
-        // 处理NFC状态变化
-        switch (state) {
-            case NfcAdapter.STATE_OFF:
-                // NFC已关闭
-                binding.progressbarNfcDelay.setVisibility(View.GONE);
-                binding.buttonNfcSetting.setVisibility(View.VISIBLE);
-                binding.textviewNfcStatus.setText("NFC已关闭");
-                break;
-            case NfcAdapter.STATE_TURNING_OFF:
-                // NFC正在关闭
-                binding.progressbarNfcDelay.setVisibility(View.VISIBLE);
-                binding.buttonNfcSetting.setVisibility(View.GONE);
-                binding.textviewNfcStatus.setText("NFC正在关闭");
-                break;
-            case NfcAdapter.STATE_ON:
-                // NFC已开启
-                binding.progressbarNfcDelay.setVisibility(View.GONE);
-                binding.buttonNfcSetting.setVisibility(View.GONE);
-                binding.textviewNfcStatus.setText("NFC已开启");
-                break;
-            case NfcAdapter.STATE_TURNING_ON:
-                // NFC正在开启
-                binding.progressbarNfcDelay.setVisibility(View.VISIBLE);
-                binding.buttonNfcSetting.setVisibility(View.GONE);
-                binding.textviewNfcStatus.setText("NFC正在开启");
-                break;
-        }
-    }
-
-    @Override
     public void onConnectionStatusChanged(boolean isConnected) {
         runOnUiThread(() -> {
             binding.buttonConnectServer.setText(isConnected ? "断开连接" : "连接服务器");
@@ -354,10 +356,10 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
     @Override
     protected void onResume() {
         super.onResume();
+        // 注册NfcStateReceiver
         if (nfcManager.isNfcSupported()) {
+            // NFC，启动
             nfcManager.enableForegroundDispatch(this);
-        } else {
-            // 更新UI显示设备不支持NFC
         }
     }
 
@@ -365,14 +367,17 @@ public class MainActivity extends AppCompatActivity implements NfcStateReceiver.
     @Override
     protected void onPause() {
         super.onPause();
+        // NFC，关闭
         nfcManager.disableForegroundDispatch(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // 注销BroadcastReceiver
-        this.unregisterReceiver(nfcStateReceiver);
+        // 注销NfcStateReceiver
+        if (nfcStateReceiver != null) {
+            unregisterReceiver(nfcStateReceiver);
+        }
         // 关闭WebSocket连接
         SpiceClient.getInstance().closeWebSocket();
     }
