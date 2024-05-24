@@ -15,7 +15,6 @@ import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -110,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
                 (hostname, port, password) -> {
                     // 保存设置到SharedPreferences
                     appSetting.saveServerSettings(hostname, port, password);
-                    Toast.makeText(MainActivity.this, "已保存", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "已保存", Toast.LENGTH_SHORT).show();
 
                     // 更新UI
                     binding.buttonSettingServer.setText("编辑");
@@ -136,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
             String cardNumber = binding.edittextCardNumber.getText().toString();
             appSetting.saveCardNumber(cardNumber); // 保存卡号到列表
             updateCardList();
-            Toast.makeText(MainActivity.this, "卡号已保存", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "卡号已保存", Toast.LENGTH_SHORT).show();
         });
 
         binding.listviewCardNumbers.setOnItemClickListener((parent, view, position, id) -> {
@@ -266,11 +265,11 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
 
     // 显示编辑卡号的对话框
     private void showEditCardNumberDialog(String cardNumber) {
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
         input.setText(cardNumber);
 
-        new MaterialAlertDialogBuilder(this)
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
                 .setTitle("编辑卡号")
                 .setView(input)
                 .setPositiveButton("保存", (dialog, which) -> {
@@ -278,10 +277,39 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
                     if (!newCardNumber.isEmpty()) {
                         appSetting.editCardNumber(cardNumber, newCardNumber);
                         updateCardList();
+                        Toast.makeText(this, "卡号已修改", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("取消", null)
-                .show();
+                .setCancelable(false);
+
+        AlertDialog dialog = builder.create();
+
+        input.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String inputText = s.toString();
+                boolean validLength = inputText.length() == 16;
+                boolean validHex = inputText.matches("[0-9A-F]*");
+
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(validLength && validHex);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // 将输入的字母转换为大写
+                String upperCaseText = s.toString().toUpperCase();
+                if (!upperCaseText.equals(s.toString())) {
+                    s.replace(0, s.length(), upperCaseText);
+                }
+            }
+        });
+
+        dialog.show();
     }
 
     private void loadHostnameAndPort() {
