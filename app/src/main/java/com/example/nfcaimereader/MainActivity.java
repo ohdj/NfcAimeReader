@@ -34,6 +34,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.Set;
+
 public class MainActivity extends AppCompatActivity implements SpiceClient.ConnectionStatusCallback {
     // ViewBinding和ViewModel
     private ActivityMainBinding binding;
@@ -266,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
     // 显示编辑卡号的对话框
     private void showEditCardNumberDialog(String cardNumber) {
         final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
         input.setText(cardNumber);
 
         new MaterialAlertDialogBuilder(this)
