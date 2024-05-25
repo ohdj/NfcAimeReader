@@ -7,11 +7,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.text.Editable;
-import android.text.InputType;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.TextWatcher;
+import android.text.*;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -268,6 +264,11 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
         EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
         input.setText(cardNumber);
+
+        // 限制用户输入的最大长度为16
+        InputFilter[] filters = new InputFilter[1];
+        filters[0] = new InputFilter.LengthFilter(16);
+        input.setFilters(filters);
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
                 .setTitle("编辑卡号")
