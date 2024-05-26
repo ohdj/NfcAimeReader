@@ -11,6 +11,7 @@ import android.text.*;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -183,11 +184,8 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
         });
 
         binding.buttonPadInput.setOnClickListener(v -> {
-            String currentInput = binding.edittextCardNumber.getText().toString().toUpperCase();
-
-            // 检查输入是否为合法的十六进制
-            boolean isHex = currentInput.matches("[0-9A-F]+") || currentInput.isEmpty();
-            if (isHex && currentInput.length() < 16) {
+            String currentInput = binding.edittextCardNumber.getText().toString();
+            if (currentInput.length() < 16) {
                 // 补足0到开头直到长度为16
                 String paddedInput = String.format("%" + 16 + "s", currentInput).replace(' ', '0');
                 binding.edittextCardNumber.setText(paddedInput);
@@ -273,6 +271,8 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
                 .setTitle("编辑卡号")
                 .setView(input)
+                .setNeutralButton("自动补齐卡号", null)
+                .setNegativeButton("取消", null)
                 .setPositiveButton("保存", (dialog, which) -> {
                     String newCardNumber = input.getText().toString();
                     if (!newCardNumber.isEmpty()) {
@@ -281,10 +281,23 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
                         Toast.makeText(this, "卡号已修改", Toast.LENGTH_SHORT).show();
                     }
                 })
-                .setNegativeButton("取消", null)
                 .setCancelable(false);
 
         AlertDialog dialog = builder.create();
+
+        dialog.setOnShowListener(dialogInterface -> {
+            Button neutralButton = dialog.getButton(AlertDialog.BUTTON_NEUTRAL);
+            neutralButton.setEnabled(false);
+            neutralButton.setOnClickListener(view -> {
+                String currentInput = input.getText().toString();
+                if (currentInput.length() < 16) {
+                    // 补足0到开头直到长度为16
+                    String paddedInput = String.format("%" + 16 + "s", currentInput).replace(' ', '0');
+                    input.setText(paddedInput);
+                    input.setSelection(paddedInput.length() - currentInput.length()); // 移动光标到补齐前的位置
+                }
+            });
+        });
 
         input.addTextChangedListener(new TextWatcher() {
             @Override
@@ -298,6 +311,7 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
                 boolean validHex = inputText.matches("[0-9A-F]*");
 
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(validLength && validHex);
+                dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setEnabled(!validLength && validHex);
             }
 
             @Override
