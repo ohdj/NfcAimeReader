@@ -154,15 +154,11 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                String input = s.toString().toUpperCase();
+                String input = s.toString();
                 binding.textviewInputStatus.setText(input.length() + "/16");
 
+                // 检测输入卡号是否达到16位
                 boolean validLength = input.length() == 16;
-
                 if (validLength) {
                     binding.textviewInputStatus.setTextColor(Color.BLACK);
                 } else {
@@ -171,7 +167,6 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
 
                 // 检查输入是否只包含十六进制允许的字符
                 boolean validHex = input.matches("[0-9A-F]*");
-
                 if (validHex) {
                     binding.textviewInputHint.setTextColor(Color.BLACK);
                 } else {
@@ -180,6 +175,15 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
 
                 binding.buttonSaveCardNumber.setEnabled(validLength && validHex);
                 binding.buttonPadInput.setEnabled(!validLength && validHex);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // 将输入的字母转换为大写
+                String upperCaseText = s.toString().toUpperCase();
+                if (!upperCaseText.equals(s.toString())) {
+                    s.replace(0, s.length(), upperCaseText);
+                }
             }
         });
 
