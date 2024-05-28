@@ -132,7 +132,7 @@
             android:id="@+id/textview_input_hint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="十六进制（只含有[0123456789ABCDEF]）" />
+            android:text="十六进制 (只含有[0123456789ABCDEF])" />
 
         <LinearLayout
             android:layout_width="match_parent"

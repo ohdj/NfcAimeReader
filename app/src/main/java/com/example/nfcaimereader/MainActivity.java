@@ -10,10 +10,7 @@ import android.provider.Settings;
 import android.text.*;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;
+import android.widget.*;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -159,20 +156,13 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
 
                 // 检测输入卡号是否达到16位
                 boolean validLength = input.length() == 16;
-                if (validLength) {
-                    binding.textviewInputStatus.setTextColor(Color.BLACK);
-                } else {
-                    binding.textviewInputStatus.setTextColor(Color.RED);
-                }
+                binding.textviewInputStatus.setTextColor(validLength ? Color.BLACK : Color.RED);
 
                 // 检查输入是否只包含十六进制允许的字符
                 boolean validHex = input.matches("[0-9A-F]*");
-                if (validHex) {
-                    binding.textviewInputHint.setTextColor(Color.BLACK);
-                } else {
-                    binding.textviewInputHint.setTextColor(Color.RED);
-                }
+                binding.textviewInputHint.setTextColor(validHex ? Color.BLACK : Color.RED);
 
+                // 根据输入设置按钮启用状态
                 binding.buttonSaveCardNumber.setEnabled(validLength && validHex);
                 binding.buttonPadInput.setEnabled(!validLength && validHex);
             }
@@ -272,9 +262,27 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
         filters[0] = new InputFilter.LengthFilter(16);
         input.setFilters(filters);
 
+        // 创建卡号长度显示的提示信息
+        TextView lengthStatus = new TextView(this);
+        lengthStatus.setText("16/16");
+        lengthStatus.setPadding(10, 0, 10, 0);
+
+        // 创建是否只包含十六进制允许的字符的提示信息
+        TextView hintText = new TextView(this);
+        hintText.setText("十六进制 (只含有[0123456789ABCDEF])");
+        hintText.setPadding(10, 0, 10, 0);
+
+        // 创建一个容器将输入框和提示信息添加进去
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 0, 50, 0);
+        layout.addView(input);
+        layout.addView(lengthStatus);
+        layout.addView(hintText);
+
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
                 .setTitle("编辑卡号")
-                .setView(input)
+                .setView(layout)
                 .setNeutralButton("自动补齐卡号", null)
                 .setNegativeButton("取消", null)
                 .setPositiveButton("保存", (dialog, which) -> {
@@ -313,6 +321,10 @@ public class MainActivity extends AppCompatActivity implements SpiceClient.Conne
                 String inputText = s.toString();
                 boolean validLength = inputText.length() == 16;
                 boolean validHex = inputText.matches("[0-9A-F]*");
+
+                lengthStatus.setText(inputText.length() + "/16");
+                lengthStatus.setTextColor(validLength ? Color.BLACK : Color.RED);
+                hintText.setTextColor(validHex ? Color.BLACK : Color.RED);
 
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(validLength && validHex);
                 dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setEnabled(!validLength && validHex);
