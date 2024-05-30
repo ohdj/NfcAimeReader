@@ -25,6 +25,13 @@ jobs:
           echo "CODE=$(cat .github/release.json | jq -r '.code')" >> $GITHUB_ENV
           echo "VERSION=$(cat .github/release.json | jq -r '.version')" >> $GITHUB_ENV
 
+      # 获取上一个 tag
+      - name: Get previous tag
+        id: get_previous_tag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        with:
+          fallback: "0.0.1"  # 设置默认的 fallback tag，如果找不到上一个 tag
+
       - name: Generate signing.properties
         run: |
           ${{ secrets.BASH_DOWNLOAD_JKS }}
@@ -71,7 +78,7 @@ jobs:
             | MD5 | ${{ env.MD5 }} |
             | SHA1 | ${{ env.SHA1 }} |
 
-            [View changes on GitHub](https://github.com/ohdj/NfcAimeReader/commits/v${{ env.VERSION }})
+            [View changes on GitHub](https://github.com/ohdj/NfcAimeReader/compare/v${{ steps.get_previous_tag.outputs.tag }}...v${{ env.VERSION }})
 
       - name: Upload APK
         uses: actions/upload-release-asset@v1
