@@ -1,0 +1,10 @@
+[binaries]
+c = 'i686-w64-mingw32-gcc'
+ar = 'i686-w64-mingw32-ar'
+strip = 'i686-w64-mingw32-strip'
+
+[host_machine]
+system = 'windows'
+cpu_family = 'x86'
+cpu = 'i686'
+endian = 'little'
