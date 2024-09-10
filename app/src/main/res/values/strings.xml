@@ -1,7 +1,0 @@
-<resources>
-    <string name="app_name">NfcAimeReader</string>
-    <string-array name="mode_array">
-        <item>NFC读取</item>
-        <item>手动输入</item>
-    </string-array>
-</resources>
