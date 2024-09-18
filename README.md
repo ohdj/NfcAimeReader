@@ -1,3 +1,19 @@
+### 正在尝试用jetpack compose重构（可以看dev分支）
+
+这个项目开始单纯是刚学安卓时就做来玩玩
+
+所以master分支的 `安卓app` 属于屎山中的屎山，代码质量堪忧，不过刷卡之类的逻辑倒是可以参考
+
+（就是java代码中对于界面的操作代码，还有那些乱七八糟的类抽象逻辑建议忽略）
+
+一开始没学清楚xml和java代码逻辑 -> 想实现功能~~但是不会~~ -> 用ai乱写一通导致的
+
+至于 sega 系的 `aimeio.dll` 我还正在琢磨，我现在手上写的虽然能用，但是很显然不是好方案，我这边还在琢磨
+
+~~所以还要再拖一段时间~~
+
+### 但是最近没啥时间，~~等我慢慢做吧~~
+
 # NFC Aime Reader
 
 一个尝试通过安卓手机 NFC 读取 Aime 为 SEGA / KONAMI 系游戏刷卡的项目
@@ -45,4 +61,6 @@ felica.txt (IDm) 和 ACCESS CODE 的转换是 Allnet 服务器实现的，而官
 
 ## :heart: 鸣谢
 
-部分代码参考自 GPT-4 和 [Mageki](https://github.com/Sanheiii/Mageki)
+部分代码参考自 GPT-4、Claude 3.5 Sonnet ~~（说是参考其实 copy 了很多）~~
+
+Aime 卡片识别行为参考了 [Mageki](https://github.com/Sanheiii/Mageki) 项目
