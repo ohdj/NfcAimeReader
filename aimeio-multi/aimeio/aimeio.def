@@ -1,0 +1,9 @@
+LIBRARY aimeio
+
+EXPORTS
+    aime_io_get_api_version
+    aime_io_init
+    aime_io_led_set_color
+    aime_io_nfc_get_aime_id
+    aime_io_nfc_get_felica_id
+    aime_io_nfc_poll
