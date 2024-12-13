@@ -1,5 +1,3 @@
-openssl_dep = dependency('openssl', required : true)
-
 aimeio_lib = shared_library(
     'aimeio',
     name_prefix : '',
@@ -11,6 +9,5 @@ aimeio_lib = shared_library(
     ],
     dependencies : [
         meson.get_compiler('c').find_library('ws2_32'),
-        openssl_dep,
     ],
 )
