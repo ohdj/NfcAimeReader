@@ -107,20 +107,22 @@ int decode_websocket_frame(const char* buffer, int buffer_len, char* payload, in
         header_size = 4;
     } else if (payload_length == 127) {
         if (buffer_len < 10) return -1;
-        // For simplicity, we're not handling full 64-bit payload length
-        return -1;
+        return -1; // 64-bit payload length not handled
     }
 
     // Check mask
     const char* mask_key = mask_bit ? buffer + header_size : NULL;
     header_size += mask_bit ? 4 : 0;
 
-    // Validate payload
+    // Validate payload length
     if (header_size + payload_length > buffer_len) return -1;
+
+    // Handle close frame specifically
+    if (opcode == WS_OPCODE_CLOSE) return 0;
 
     // Unmask payload if needed
     if (mask_key) {
-        for (int i = 0; i < payload_length && i < payload_size - 1; i++) {
+        for (uint64_t i = 0; i < payload_length && i < (uint64_t)(payload_size - 1); i++) {
             payload[i] = buffer[header_size + i] ^ mask_key[i % 4];
         }
         payload[payload_length] = '\0';
@@ -291,14 +293,22 @@ DWORD WINAPI WebSocketThread(LPVOID lpParam) {
 
             // Decode WebSocket frame
             int payload_len = decode_websocket_frame(buffer, bytes_received, payload, sizeof(payload));
-            if (payload_len > 0) {
+            uint8_t opcode = buffer[0] & 0x0F; // Extract opcode
+
+            if (opcode == WS_OPCODE_CLOSE) {
+                printf("WebSocket close frame received.");
+
+                // Update connection status and break
+                update_connection_status(WS_DISCONNECTED);
+                break;
+            } else if (payload_len > 0) {
                 printf("Received payload: %s\n", payload);
 
                 // Validate and process card ID
                 if (payload_len == AIME_ID_SIZE * 2) {
                     // Convert hex string to bytes
                     for (size_t i = 0; i < AIME_ID_SIZE; i++) {
-                        sscanf(payload + i*2, "%02hhx", &ctx.aime_ids[0][i]);
+                        sscanf(payload + i * 2, "%02hhx", &ctx.aime_ids[0][i]);
                     }
                     ctx.current_aime = 0;  // Set current AIME card
                     strncpy(ctx.last_received_card_id, payload, sizeof(ctx.last_received_card_id) - 1);
