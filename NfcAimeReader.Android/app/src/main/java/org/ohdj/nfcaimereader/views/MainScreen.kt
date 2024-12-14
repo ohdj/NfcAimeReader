@@ -1,5 +1,7 @@
 package org.ohdj.nfcaimereader.views
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,6 +22,17 @@ fun MainScreen(
     val context = LocalContext.current
     val webSocketManager = remember { WebSocketManager(context) }
     val coroutineScope = rememberCoroutineScope()
+
+    val nfcStateReceiver = remember { NfcStateBroadcastReceiver() }
+    val isNfcEnabled by nfcStateReceiver.nfcState.collectAsState(initial = false)
+
+    // 注册和注销广播接收器
+    DisposableEffect(context) {
+        nfcStateReceiver.register(context)
+        onDispose {
+            nfcStateReceiver.unregister(context)
+        }
+    }
 
     // Observe saved server address
     LaunchedEffect(Unit) {
@@ -60,6 +73,7 @@ fun MainScreen(
         NfcCardScreen(
             nfcManager = nfcManager,
             webSocketManager = webSocketManager,
+            isNfcEnabled = isNfcEnabled,
             onDisconnect = {
                 webSocketManager.disconnect()
                 isConnected = false
@@ -158,11 +172,11 @@ fun ConnectionScreen(
 fun NfcCardScreen(
     nfcManager: NfcManager,
     webSocketManager: WebSocketManager,
+    isNfcEnabled: Boolean,
     onDisconnect: () -> Unit
 ) {
     val context = LocalContext.current
     val nfcStateReceiver = remember { NfcStateBroadcastReceiver() }
-    val isNfcEnabled by nfcStateReceiver.nfcState.collectAsState(initial = false)
     val cardIdm by nfcManager.cardIdm.collectAsState()
 
     // Check and request NFC permissions
@@ -199,6 +213,20 @@ fun NfcCardScreen(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        // Conditional NFC Settings Button
+        if (!isNfcEnabled) {
+            Button(
+                onClick = {
+                    val intent = Intent(Settings.ACTION_NFC_SETTINGS)
+                    context.startActivity(intent)
+                }
+            ) {
+                Text("Open NFC Settings")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         // Current Card ID
         Text(
