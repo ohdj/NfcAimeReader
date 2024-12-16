@@ -1,75 +1,92 @@
 package org.ohdj.nfcaimereader.views
 
-import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
-import org.ohdj.nfcaimereader.utils.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(
-    nfcManager: NfcManager,
-    networkScanner: NetworkScanner
-) {
-    var isConnected by remember { mutableStateOf(false) }
-    var serverAddress by remember { mutableStateOf("") }
-    val context = LocalContext.current
-    val webSocketManager = remember { WebSocketManager(context) }
-    val coroutineScope = rememberCoroutineScope()
+fun MainScreen(navController: NavController) {
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    var showBottomSheet by remember { mutableStateOf(false) }
 
-    val nfcStateReceiver = remember { NfcStateBroadcastReceiver() }
-    val isNfcEnabled by nfcStateReceiver.nfcState.collectAsState(initial = false)
-
-    // 注册和注销广播接收器
-    DisposableEffect(context) {
-        nfcStateReceiver.register(context)
-        onDispose {
-            nfcStateReceiver.unregister(context)
-        }
-    }
-
-    // Observe saved server address
-    LaunchedEffect(Unit) {
-        webSocketManager.getServerAddress().collect { savedAddress ->
-            savedAddress?.let { serverAddress = it }
-        }
-    }
-
-    // WebSocket connection handling
-    val webSocketCallback = object : WebSocketManager.WebSocketCallback {
-        override fun onConnected() {
-            isConnected = true
-        }
-
-        override fun onDisconnected() {
-            isConnected = false
-        }
-
-        override fun onMessageReceived(message: String) {
-            // Handle incoming messages if needed
-        }
-
-        override fun onError(errorMessage: String) {
-            // Show error dialog
-            // TODO: Implement error handling UI
-        }
-    }
-
-    if (!isConnected) {
-        ConnectionScreen(
-            networkScanner = networkScanner,
-            webSocketManager = webSocketManager,
-            onConnectSuccess = {
-                webSocketManager.connect(serverAddress, webSocketCallback)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text("NfcAimeReader")
+                },
+                actions = {
+                    IconButton(onClick = { navController.navigate("settings") }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = "Settings"
+                        )
+                    }
+                    IconButton(onClick = { /* do something */ }) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = "MoreVert"
+                        )
+                    }
+                },
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                text = { Text("Show bottom sheet") },
+                icon = { Icon(Icons.Filled.Add, contentDescription = "") },
+                onClick = {
+                    showBottomSheet = true
+                }
+            )
+        },
+    ) { contentPadding ->
+        Column(
+            modifier = Modifier.padding(contentPadding)
+        ) {
+            if (showBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showBottomSheet = false
+                    },
+                    sheetState = sheetState
+                ) {
+                    // Sheet content
+                    Button(onClick = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                showBottomSheet = false
+                            }
+                        }
+                    }) {
+                        Text("Hide bottom sheet")
+                    }
+                }
             }
-        )
-    } else {
-        NfcCardScreen(
-            nfcManager = nfcManager,
-            webSocketManager = webSocketManager,
-            isNfcEnabled = isNfcEnabled,
-            onDisconnect = {
-                webSocketManager.disconnect()
-                isConnected = false
-            }
-        )
+        }
     }
 }

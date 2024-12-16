@@ -9,7 +9,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import org.ohdj.nfcaimereader.utils.NetworkScanner
 import org.ohdj.nfcaimereader.utils.NfcManager
-import org.ohdj.nfcaimereader.views.MainScreen
 
 class MainActivity : ComponentActivity() {
     private lateinit var nfcManager: NfcManager
@@ -26,7 +25,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen(nfcManager, networkScanner)
+                    App()
                 }
             }
         }
