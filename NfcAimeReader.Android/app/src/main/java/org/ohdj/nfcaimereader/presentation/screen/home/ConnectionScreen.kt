@@ -1,4 +1,4 @@
-package org.ohdj.nfcaimereader.views
+package org.ohdj.nfcaimereader.presentation.screen.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

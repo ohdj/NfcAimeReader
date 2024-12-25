@@ -1,4 +1,4 @@
-package org.ohdj.nfcaimereader.views
+package org.ohdj.nfcaimereader.presentation.screen.card
 
 import android.content.Intent
 import android.provider.Settings
