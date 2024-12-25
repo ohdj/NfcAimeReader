@@ -1,18 +1,16 @@
-### 正在尝试用jetpack compose重构（可以看dev分支）
+### 正在使用 jetpack compose 重构💩山
 
-这个项目开始单纯是刚学安卓时就做来玩玩
+这个项目单纯是边学安卓边做来玩玩，所以进度很慢
 
-所以master分支的 `安卓app` 属于屎山中的屎山，代码质量堪忧，不过刷卡之类的逻辑倒是可以参考
+#### sega 系的 `aimeio.dll` 我手头上功能写出来了，但是目前还不是好方案
 
-（就是java代码中对于界面的操作代码，还有那些乱七八糟的类抽象逻辑建议忽略）
+等我慢慢琢磨，至少 websocket 那边的接口还得一点点对应 `安卓app` 功能来改
 
-一开始没学清楚xml和java代码逻辑 -> 想实现功能~~但是不会~~ -> 用ai乱写一通导致的
+如果想看 aimeio 逻辑可以看这位大佬，技术栈用的 .net9，代码真心优雅多了
 
-至于 sega 系的 `aimeio.dll` 我还正在琢磨，我现在手上写的虽然能用，但是很显然不是好方案，我这边还在琢磨
+[https://gitea.tendokyu.moe/ppc/amnet](https://gitea.tendokyu.moe/ppc/amnet/src/branch/master/AMNet.Server)
 
-~~所以还要再拖一段时间~~
-
-### 但是最近没啥时间，~~等我慢慢做吧~~
+### 最近期末没啥时间，~~等我慢慢改吧~~
 
 # NFC Aime Reader
 
