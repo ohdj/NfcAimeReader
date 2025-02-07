@@ -2,25 +2,22 @@ package org.ohdj.nfcaimereader
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -34,34 +31,12 @@ import org.ohdj.nfcaimereader.presentation.screen.home.HomeViewModel
 import org.ohdj.nfcaimereader.presentation.screen.setting.SettingScreen
 import org.ohdj.nfcaimereader.presentation.screen.setting.SettingViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 fun App() {
     val navController = rememberNavController()
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text("NfcAimeReader")
-                },
-                actions = {
-                    IconButton(onClick = { /* do something */ }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Settings,
-                            contentDescription = "Settings"
-                        )
-                    }
-                    IconButton(onClick = { /* do something */ }) {
-                        Icon(
-                            imageVector = Icons.Filled.MoreVert,
-                            contentDescription = "MoreVert"
-                        )
-                    }
-                },
-            )
-        },
         bottomBar = {
             BottomNavigationBar(navController = navController)
         }
@@ -70,7 +45,7 @@ fun App() {
             NavHost(
                 navController = navController,
                 startDestination = "home",
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
             ) {
                 composable("home") {
                     val viewModel: HomeViewModel = viewModel()
@@ -106,7 +81,7 @@ fun BottomNavigationBar(navController: NavHostController) {
                     }
                 },
                 label = { Text("主页") },
-                icon = { Icon(Icons.Default.Home, contentDescription = null) }
+                icon = { Icon(Icons.Default.Home, contentDescription = "home") }
             )
             NavigationBarItem(
                 selected = currentDestination == "card",
@@ -118,7 +93,7 @@ fun BottomNavigationBar(navController: NavHostController) {
                     }
                 },
                 label = { Text("卡片") },
-                icon = { Icon(Icons.Default.AddCircle, contentDescription = null) }
+                icon = { Icon(Icons.Default.AddCircle, contentDescription = "card") }
             )
             NavigationBarItem(
                 selected = currentDestination == "setting",
@@ -130,7 +105,7 @@ fun BottomNavigationBar(navController: NavHostController) {
                     }
                 },
                 label = { Text("设置") },
-                icon = { Icon(Icons.Default.Settings, contentDescription = null) }
+                icon = { Icon(Icons.Default.Settings, contentDescription = "setting") }
             )
         }
     }
