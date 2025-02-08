@@ -69,44 +69,42 @@ fun BottomNavigationBar(navController: NavHostController) {
     val currentBackStackEntry = navController.currentBackStackEntryAsState()
     val currentDestination = currentBackStackEntry.value?.destination?.route
 
-    BottomAppBar {
-        NavigationBar {
-            NavigationBarItem(
-                selected = currentDestination == "home",
-                onClick = {
-                    navController.navigate("home") {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                label = { Text("主页") },
-                icon = { Icon(Icons.Default.Home, contentDescription = "home") }
-            )
-            NavigationBarItem(
-                selected = currentDestination == "card",
-                onClick = {
-                    navController.navigate("card") {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                label = { Text("卡片") },
-                icon = { Icon(Icons.Default.AddCircle, contentDescription = "card") }
-            )
-            NavigationBarItem(
-                selected = currentDestination == "setting",
-                onClick = {
-                    navController.navigate("setting") {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                label = { Text("设置") },
-                icon = { Icon(Icons.Default.Settings, contentDescription = "setting") }
-            )
-        }
+    NavigationBar {
+        NavigationBarItem(
+            selected = currentDestination == "home",
+            onClick = {
+                navController.navigate("home") {
+                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            },
+            label = { Text("主页") },
+            icon = { Icon(Icons.Default.Home, contentDescription = "home") }
+        )
+        NavigationBarItem(
+            selected = currentDestination == "card",
+            onClick = {
+                navController.navigate("card") {
+                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            },
+            label = { Text("卡片") },
+            icon = { Icon(Icons.Default.AddCircle, contentDescription = "card") }
+        )
+        NavigationBarItem(
+            selected = currentDestination == "setting",
+            onClick = {
+                navController.navigate("setting") {
+                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            },
+            label = { Text("设置") },
+            icon = { Icon(Icons.Default.Settings, contentDescription = "setting") }
+        )
     }
 }
