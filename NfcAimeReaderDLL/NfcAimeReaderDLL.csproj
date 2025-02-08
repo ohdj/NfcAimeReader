@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Platforms>AnyCPU;x64</Platforms>
+		<PublishAot>true</PublishAot>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Fleck" Version="1.2.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.3.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.1" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+      <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.106">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="packages\" />
+    </ItemGroup>
+
+</Project>
