@@ -1,16 +1,8 @@
-### 正在使用 jetpack compose 重构💩山
+这个项目单纯是边学安卓边做来玩玩，进度很慢，目前还在刚开始做的状态 ~~（哪怕这仓库存在一年了）~~
 
-这个项目单纯是边学安卓边做来玩玩，所以进度很慢
+如果现在想用手机刷卡的，可以用用各大街机音游群-群文件里流传的 `手机读卡器.zip`
 
-#### sega 系的 `aimeio.dll` 我手头上功能写出来了，但是目前还不是好方案
-
-等我慢慢琢磨，至少 websocket 那边的接口还得一点点对应 `安卓app` 功能来改
-
-如果想看 aimeio 逻辑可以看这位大佬，技术栈用的 .net9，代码真心优雅多了
-
-[https://gitea.tendokyu.moe/ppc/amnet](https://gitea.tendokyu.moe/ppc/amnet/src/branch/master/AMNet.Server)
-
-### 最近期末没啥时间，~~等我慢慢改吧~~
+或是寻找其他项目使用 如 https://gitea.tendokyu.moe/ppc/amnet
 
 # NFC Aime Reader
 
