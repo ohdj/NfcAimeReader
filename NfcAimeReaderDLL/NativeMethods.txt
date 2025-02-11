@@ -1,0 +1,5 @@
+﻿GetPrivateProfileStringW
+GetPrivateProfileInt
+GetAsyncKeyState
+AllocConsole
+MAX_PATH
