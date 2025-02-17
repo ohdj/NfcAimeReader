@@ -1,34 +1,32 @@
 package org.ohdj.nfcaimereader.presentation.screen.home
 
+import android.app.Activity
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -38,27 +36,59 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import org.ohdj.nfcaimereader.utils.NetworkScanner
+import org.ohdj.nfcaimereader.utils.NfcManager
+import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
+import org.ohdj.nfcaimereader.utils.WebSocketManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(viewModel: HomeViewModel) {
+    val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
+    var serverStatus by remember { mutableStateOf("未连接服务器") }
+    // 使用单例模式获取NfcManager实例
+    val nfcManager = remember { NfcManager.getInstance(context as Activity) }
+    val wsManager = remember { WebSocketManager(context) }
+
+    // NFC状态与读卡相关
+    val cardIdm by nfcManager.cardIdm.collectAsState()
+    val nfcStateReceiver = remember { NfcStateBroadcastReceiver() }
+    LaunchedEffect(Unit) {
+        nfcStateReceiver.register(context)
+
+        // Check and request NFC permissions
+        if (!nfcStateReceiver.isNfcEnabled(context)) {
+            // TODO: Implement NFC enable request dialog
+        }
+    }
+    // Send card ID when detected
+//    LaunchedEffect(cardIdm) {
+//        cardIdm?.let { hexCardId ->
+//            val decimalCardId = webSocketManager.convertCardId(hexCardId)
+//            webSocketManager.sendCardId(decimalCardId)
+//        }
+//    }
+    // 通过 collectAsState 订阅状态更新
+    val isNfcEnabled by nfcStateReceiver.nfcState.collectAsState(
+        initial = nfcStateReceiver.isNfcEnabled(context)
+    )
 
     Scaffold(
         topBar = {
@@ -84,8 +114,8 @@ fun HomeScreen(viewModel: HomeViewModel) {
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                text = { Text("Show bottom sheet") },
-                icon = { Icon(Icons.Filled.Add, contentDescription = "") },
+                text = { Text("连接服务器") },
+                icon = { Icon(Icons.Filled.Add, contentDescription = "Add Server") },
                 onClick = {
                     showBottomSheet = true
                 }
@@ -123,12 +153,48 @@ fun HomeScreen(viewModel: HomeViewModel) {
                     Spacer(modifier = Modifier.width(16.dp))
 
                     Text(
-                        text = "提示：未连接服务器",
+                        text = serverStatus,
                         fontSize = 16.sp,
                         color = Color.Black
                     )
                 }
             }
+
+            // 读卡功能
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = if (isNfcEnabled) "NFC Enabled" else "NFC Disabled",
+                    color = if (isNfcEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Go to NFC Settings
+                if (!isNfcEnabled) {
+                    Button(
+                        onClick = {
+                            val intent = Intent(Settings.ACTION_NFC_SETTINGS)
+                            context.startActivity(intent)
+                        }
+                    ) {
+                        Text("Open NFC Settings")
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Current Card ID
+                Text(
+                    text = "Last Card ID: ${cardIdm ?: "No card scanned"}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+
             if (showBottomSheet) {
                 ModalBottomSheet(
                     onDismissRequest = {
@@ -138,6 +204,15 @@ fun HomeScreen(viewModel: HomeViewModel) {
 //                windowInsets = WindowInsets.navigationBars
                     windowInsets = WindowInsets(0, 0, 0, 0)
                 ) {
+                    ConnectionScreen(
+                        networkScanner = NetworkScanner(),
+                        webSocketManager = WebSocketManager(context),
+                        onConnectSuccess = {
+                            serverStatus = "已连接服务器"
+                            showBottomSheet = false
+                        }
+                    )
+
                     Column(
                         modifier = Modifier
                             .padding(bottom = 16.dp) // 底部预留 padding
@@ -145,104 +220,32 @@ fun HomeScreen(viewModel: HomeViewModel) {
                     ) {
                         Button(
                             onClick = {
-                                scope.launch {
-                                    sheetState.hide()
-                                }.invokeOnCompletion {
+                                scope.launch { sheetState.hide() }.invokeOnCompletion {
                                     if (!sheetState.isVisible) showBottomSheet = false
                                 }
                             }
                         ) {
                             Text(viewModel.text)
                         }
+
+                        var text by remember { mutableStateOf("") }
+                        OutlinedTextField(
+                            value = text,
+                            onValueChange = { text = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            label = { Text("Hostname") }
+                        )
+                        OutlinedTextField(
+                            value = text,
+                            onValueChange = { text = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            label = { Text("Port") }
+                        )
                     }
-                }
-            }
-        }
-    }
-}
-
-@Preview
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ModalBottomSheetSample() {
-    // Bottom Sheet 开启状态
-    var openBottomSheet by rememberSaveable { mutableStateOf(false) }
-    // 跳过部分展开的状态
-    var skipPartiallyExpanded by rememberSaveable { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-    val bottomSheetState =
-        rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
-
-    // App content
-    Column(
-        horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Row(
-            Modifier.toggleable(
-                value = skipPartiallyExpanded,
-                role = Role.Checkbox,
-                onValueChange = { checked -> skipPartiallyExpanded = checked }
-            )
-        ) {
-            Checkbox(checked = skipPartiallyExpanded, onCheckedChange = null)
-            Spacer(Modifier.width(16.dp))
-            Text("Skip partially expanded State")
-        }
-        Button(
-            onClick = { openBottomSheet = !openBottomSheet },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text(text = "Show Bottom Sheet")
-        }
-    }
-
-    // Sheet content
-    if (openBottomSheet) {
-
-        ModalBottomSheet(
-            onDismissRequest = { openBottomSheet = false },
-            sheetState = bottomSheetState,
-        ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                Button(
-                    // Note: If you provide logic outside of onDismissRequest to remove the sheet,
-                    // you must additionally handle intended state cleanup, if any.
-                    onClick = {
-                        scope
-                            .launch { bottomSheetState.hide() }
-                            .invokeOnCompletion {
-                                if (!bottomSheetState.isVisible) {
-                                    openBottomSheet = false
-                                }
-                            }
-                    }
-                ) {
-                    Text("Hide Bottom Sheet")
-                }
-            }
-            var text by remember { mutableStateOf("") }
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                modifier = Modifier.padding(horizontal = 16.dp),
-                label = { Text("Text field") }
-            )
-            LazyColumn {
-                items(25) {
-                    ListItem(
-                        headlineContent = { Text("Item $it") },
-                        leadingContent = {
-                            Icon(
-                                Icons.Default.Favorite,
-                                contentDescription = "Localized description"
-                            )
-                        },
-                        colors =
-                        ListItemDefaults.colors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                        ),
-                    )
                 }
             }
         }

@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
             )
         )
         super.onCreate(savedInstanceState)
-        nfcManager = NfcManager(this)
+        nfcManager = NfcManager.getInstance(this)
 
         setContent {
             MaterialTheme {
