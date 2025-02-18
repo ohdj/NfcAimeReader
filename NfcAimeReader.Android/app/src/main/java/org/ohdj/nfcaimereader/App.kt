@@ -46,7 +46,7 @@ fun App() {
             ) {
                 composable("home") {
                     val viewModel: HomeViewModel = viewModel()
-                    HomeScreen(viewModel)
+                    HomeScreen()
                 }
                 composable("card") {
                     val viewModel: CardViewModel = viewModel()

@@ -17,19 +17,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -41,7 +37,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,23 +44,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
-import org.ohdj.nfcaimereader.utils.NetworkScanner
 import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
 import org.ohdj.nfcaimereader.utils.WebSocketManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: HomeViewModel) {
+fun HomeScreen() {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
-    var serverStatus by remember { mutableStateOf("未连接服务器") }
+    // 获取 WebSocketManager 单例
+    val wsManager = remember { WebSocketManager.getInstance() }
+    val wsStatus by wsManager.connectionStatus.collectAsState()
     // 使用单例模式获取NfcManager实例
     val nfcManager = remember { NfcManager.getInstance(context as Activity) }
-    val wsManager = remember { WebSocketManager(context) }
 
     // NFC状态与读卡相关
     val cardIdm by nfcManager.cardIdm.collectAsState()
@@ -95,21 +88,7 @@ fun HomeScreen(viewModel: HomeViewModel) {
             TopAppBar(
                 title = {
                     Text("NfcAimeReader")
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Settings,
-                            contentDescription = "Settings"
-                        )
-                    }
-                    IconButton(onClick = { }) {
-                        Icon(
-                            imageVector = Icons.Filled.MoreVert,
-                            contentDescription = "MoreVert"
-                        )
-                    }
-                },
+                }
             )
         },
         floatingActionButton = {
@@ -152,8 +131,9 @@ fun HomeScreen(viewModel: HomeViewModel) {
 
                     Spacer(modifier = Modifier.width(16.dp))
 
+                    // 显示 websocket 当前连接状态
                     Text(
-                        text = serverStatus,
+                        text = wsStatus,
                         fontSize = 16.sp,
                         color = Color.Black
                     )
@@ -205,47 +185,11 @@ fun HomeScreen(viewModel: HomeViewModel) {
                     windowInsets = WindowInsets(0, 0, 0, 0)
                 ) {
                     ConnectionScreen(
-                        networkScanner = NetworkScanner(),
-                        webSocketManager = WebSocketManager(context),
+                        wsManager,
                         onConnectSuccess = {
-                            serverStatus = "已连接服务器"
                             showBottomSheet = false
                         }
                     )
-
-                    Column(
-                        modifier = Modifier
-                            .padding(bottom = 16.dp) // 底部预留 padding
-                            .fillMaxWidth()
-                    ) {
-                        Button(
-                            onClick = {
-                                scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                    if (!sheetState.isVisible) showBottomSheet = false
-                                }
-                            }
-                        ) {
-                            Text(viewModel.text)
-                        }
-
-                        var text by remember { mutableStateOf("") }
-                        OutlinedTextField(
-                            value = text,
-                            onValueChange = { text = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            label = { Text("Hostname") }
-                        )
-                        OutlinedTextField(
-                            value = text,
-                            onValueChange = { text = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            label = { Text("Port") }
-                        )
-                    }
                 }
             }
         }
