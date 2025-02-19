@@ -52,7 +52,7 @@ fun ConnectionScreen(
             onClick = {
                 serverAddress = "$ipAddress:$port"
                 coroutineScope.launch {
-                    webSocketManager.connect("$ipAddress:$port")
+                    // webSocketManager.connect("$ipAddress:$port")
                     onConnectSuccess()
                 }
             },

@@ -3,11 +3,20 @@ package org.ohdj.nfcaimereader.presentation.screen.home
 import android.app.Activity
 import android.content.Intent
 import android.provider.Settings
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -16,7 +25,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -25,12 +35,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,23 +49,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
-import org.ohdj.nfcaimereader.utils.WebSocketManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
     val context = LocalContext.current
-    val sheetState = rememberModalBottomSheetState()
-    var showBottomSheet by remember { mutableStateOf(false) }
-    // 获取 WebSocketManager 单例
-    val wsManager = remember { WebSocketManager.getInstance() }
-    val wsStatus by wsManager.connectionStatus.collectAsState()
+    var isScaning by remember { mutableStateOf(false) }
+
     // 使用单例模式获取NfcManager实例
     val nfcManager = remember { NfcManager.getInstance(context as Activity) }
 
@@ -92,13 +99,19 @@ fun HomeScreen() {
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                text = { Text("连接服务器") },
-                icon = { Icon(Icons.Filled.Add, contentDescription = "Add Server") },
-                onClick = {
-                    showBottomSheet = true
-                }
-            )
+            AnimatedVisibility(
+                visible = !isScaning,
+                enter = scaleIn(),
+                exit = scaleOut()
+            ) {
+                ExtendedFloatingActionButton(
+                    text = { Text("扫描服务器") },
+                    icon = { Icon(Icons.Filled.Search, contentDescription = "Scan Server") },
+                    onClick = {
+                        isScaning = true
+                    }
+                )
+            }
         },
     ) { contentPadding ->
         Column(
@@ -107,11 +120,13 @@ fun HomeScreen() {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .animateContentSize(),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFEDF4F6)
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
+                onClick = { isScaning = !isScaning }
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
@@ -120,12 +135,13 @@ fun HomeScreen() {
                     Surface(
                         modifier = Modifier.size(40.dp),
                         shape = CircleShape,
-                        color = Color(0xFFC4EAFD)
+                        color = MaterialTheme.colorScheme.surface,
                     ) {
                         Icon(
                             modifier = Modifier.padding(8.dp),
                             imageVector = Icons.Outlined.Info,
-                            contentDescription = "Server Status Icon"
+                            contentDescription = "Server Status Icon",
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -133,10 +149,47 @@ fun HomeScreen() {
 
                     // 显示 websocket 当前连接状态
                     Text(
-                        text = wsStatus,
+                        text = "服务器未配置",
                         fontSize = 16.sp,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                }
+
+                if (isScaning) {
+                    Canvas(modifier = Modifier.fillMaxWidth()) {
+                        drawLine(
+                            start = Offset(x = 106f, y = -42f),
+                            end = Offset(x = 106f, y = 42f),
+                            color = Color.Gray,
+                            strokeWidth = 5F
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(40.dp),
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surface,
+                        ) {
+                            Icon(
+                                modifier = Modifier.padding(8.dp),
+                                imageVector = Icons.Outlined.Check,
+                                contentDescription = "Server Status Icon",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        // 显示 websocket 当前连接状态
+                        Text(
+                            text = "服务器已连接",
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
 
@@ -173,24 +226,6 @@ fun HomeScreen() {
                     text = "Last Card ID: ${cardIdm ?: "No card scanned"}",
                     style = MaterialTheme.typography.bodyLarge
                 )
-            }
-
-            if (showBottomSheet) {
-                ModalBottomSheet(
-                    onDismissRequest = {
-                        showBottomSheet = false
-                    },
-                    sheetState = sheetState,
-//                windowInsets = WindowInsets.navigationBars
-                    windowInsets = WindowInsets(0, 0, 0, 0)
-                ) {
-                    ConnectionScreen(
-                        wsManager,
-                        onConnectSuccess = {
-                            showBottomSheet = false
-                        }
-                    )
-                }
             }
         }
     }
