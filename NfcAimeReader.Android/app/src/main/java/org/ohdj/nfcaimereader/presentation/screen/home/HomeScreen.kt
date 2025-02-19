@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -45,7 +44,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.ohdj.nfcaimereader.utils.NetworkScanner
 import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
 import org.ohdj.nfcaimereader.utils.WebSocketManager
@@ -56,16 +54,15 @@ fun HomeScreen() {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
+    // 获取 WebSocketManager 单例
+    val wsManager = remember { WebSocketManager.getInstance() }
+    val wsStatus by wsManager.connectionStatus.collectAsState()
     // 使用单例模式获取NfcManager实例
     val nfcManager = remember { NfcManager.getInstance(context as Activity) }
-
-    val websocketManager = WebSocketManager()
-    val networkScanner = NetworkScanner(context)
 
     // NFC状态与读卡相关
     val cardIdm by nfcManager.cardIdm.collectAsState()
     val nfcStateReceiver = remember { NfcStateBroadcastReceiver() }
-
     LaunchedEffect(Unit) {
         nfcStateReceiver.register(context)
 
@@ -74,7 +71,6 @@ fun HomeScreen() {
             // TODO: Implement NFC enable request dialog
         }
     }
-
     // Send card ID when detected
 //    LaunchedEffect(cardIdm) {
 //        cardIdm?.let { hexCardId ->
@@ -82,7 +78,6 @@ fun HomeScreen() {
 //            webSocketManager.sendCardId(decimalCardId)
 //        }
 //    }
-
     // 通过 collectAsState 订阅状态更新
     val isNfcEnabled by nfcStateReceiver.nfcState.collectAsState(
         initial = nfcStateReceiver.isNfcEnabled(context)
@@ -109,7 +104,41 @@ fun HomeScreen() {
         Column(
             modifier = Modifier.padding(contentPadding)
         ) {
-            WebsocketStatusCard(websocketManager)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFEDF4F6)
+                ),
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        modifier = Modifier.size(40.dp),
+                        shape = CircleShape,
+                        color = Color(0xFFC4EAFD)
+                    ) {
+                        Icon(
+                            modifier = Modifier.padding(8.dp),
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = "Server Status Icon"
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    // 显示 websocket 当前连接状态
+                    Text(
+                        text = wsStatus,
+                        fontSize = 16.sp,
+                        color = Color.Black
+                    )
+                }
+            }
 
             // 读卡功能
             Column(
@@ -155,67 +184,14 @@ fun HomeScreen() {
 //                windowInsets = WindowInsets.navigationBars
                     windowInsets = WindowInsets(0, 0, 0, 0)
                 ) {
-
+                    ConnectionScreen(
+                        wsManager,
+                        onConnectSuccess = {
+                            showBottomSheet = false
+                        }
+                    )
                 }
             }
-
-            // 订阅扫描状态
-            val scanStatus by networkScanner.scanStatus.collectAsState()
-
-            // 显示网络扫描的当前状态
-            Text(
-                text = "Scan Status: $scanStatus",
-                modifier = Modifier.padding(16.dp)
-            )
-
-            Button(
-                onClick = { networkScanner.startScan() },
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(text = "Start Scan")
-            }
-        }
-    }
-}
-
-@Composable
-fun WebsocketStatusCard(websocketManager: WebSocketManager) {
-    val connectionStatus by websocketManager.connectionStatus.collectAsState()
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFEDF4F6)
-        ),
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                modifier = Modifier.size(40.dp),
-                shape = CircleShape,
-                color = Color(0xFFC4EAFD)
-            ) {
-                Icon(
-                    modifier = Modifier.padding(8.dp),
-                    // 图标根据当前 websocket 连接进行同步更改
-                    imageVector = if (connectionStatus.startsWith("Connected")) Icons.Outlined.Check else Icons.Outlined.Info,
-                    contentDescription = "Server Status Icon"
-                )
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            // 显示 websocket 当前连接状态
-            Text(
-                text = connectionStatus,
-                fontSize = 16.sp,
-                color = Color.Black
-            )
         }
     }
 }
