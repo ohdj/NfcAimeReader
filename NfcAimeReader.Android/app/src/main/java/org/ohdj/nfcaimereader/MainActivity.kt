@@ -10,9 +10,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import org.ohdj.nfcaimereader.utils.NfcManager
+import org.ohdj.nfcaimereader.utils.WebSocketManager
 
 class MainActivity : ComponentActivity() {
     private lateinit var nfcManager: NfcManager
+    private lateinit var webSocketManager: WebSocketManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(
@@ -27,6 +29,7 @@ class MainActivity : ComponentActivity() {
         )
         super.onCreate(savedInstanceState)
         nfcManager = NfcManager(this)
+        webSocketManager = WebSocketManager()
 
         setContent {
             MaterialTheme {
@@ -34,7 +37,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.surface
                 ) {
-                    App(nfcManager)
+                    App(nfcManager, webSocketManager)
                 }
             }
         }

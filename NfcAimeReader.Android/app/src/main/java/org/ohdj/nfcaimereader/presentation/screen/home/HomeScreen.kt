@@ -56,12 +56,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
+import org.ohdj.nfcaimereader.utils.NetworkScanner
+import org.ohdj.nfcaimereader.utils.WebSocketManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(nfcManager: NfcManager) {
+fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
     val context = LocalContext.current
     var isScaning by remember { mutableStateOf(false) }
+    val networkScanner = remember { NetworkScanner() }
 
     // NFC状态与读卡相关
     val cardIdm by nfcManager.cardIdm.collectAsState()
@@ -117,6 +120,7 @@ fun HomeScreen(nfcManager: NfcManager) {
                     icon = { Icon(Icons.Filled.Search, contentDescription = "Scan Server") },
                     onClick = {
                         isScaning = true
+                        networkScanner.startScan(context, webSocketManager)
                     }
                 )
             }

@@ -14,7 +14,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -28,9 +27,10 @@ import org.ohdj.nfcaimereader.presentation.screen.home.HomeViewModel
 import org.ohdj.nfcaimereader.presentation.screen.setting.SettingScreen
 import org.ohdj.nfcaimereader.presentation.screen.setting.SettingViewModel
 import org.ohdj.nfcaimereader.utils.NfcManager
+import org.ohdj.nfcaimereader.utils.WebSocketManager
 
 @Composable
-fun App(nfcManager: NfcManager) {
+fun App(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -46,7 +46,7 @@ fun App(nfcManager: NfcManager) {
             ) {
                 composable("home") {
                     val viewModel: HomeViewModel = viewModel()
-                    HomeScreen(nfcManager)
+                    HomeScreen(nfcManager, webSocketManager)
                 }
                 composable("card") {
                     val viewModel: CardViewModel = viewModel()
