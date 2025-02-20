@@ -27,10 +27,10 @@ import org.ohdj.nfcaimereader.presentation.screen.home.HomeScreen
 import org.ohdj.nfcaimereader.presentation.screen.home.HomeViewModel
 import org.ohdj.nfcaimereader.presentation.screen.setting.SettingScreen
 import org.ohdj.nfcaimereader.presentation.screen.setting.SettingViewModel
+import org.ohdj.nfcaimereader.utils.NfcManager
 
 @Composable
-@Preview
-fun App() {
+fun App(nfcManager: NfcManager) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -46,7 +46,7 @@ fun App() {
             ) {
                 composable("home") {
                     val viewModel: HomeViewModel = viewModel()
-                    HomeScreen()
+                    HomeScreen(nfcManager)
                 }
                 composable("card") {
                     val viewModel: CardViewModel = viewModel()

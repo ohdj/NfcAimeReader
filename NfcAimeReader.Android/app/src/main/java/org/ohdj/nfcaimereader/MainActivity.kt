@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
             )
         )
         super.onCreate(savedInstanceState)
-        nfcManager = NfcManager.getInstance(this)
+        nfcManager = NfcManager(this)
 
         setContent {
             MaterialTheme {
@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.surface
                 ) {
-                    App()
+                    App(nfcManager)
                 }
             }
         }

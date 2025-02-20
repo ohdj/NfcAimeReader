@@ -1,6 +1,5 @@
 package org.ohdj.nfcaimereader.presentation.screen.home
 
-import android.app.Activity
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.animation.AnimatedContent
@@ -60,21 +59,18 @@ import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(nfcManager: NfcManager) {
     val context = LocalContext.current
     var isScaning by remember { mutableStateOf(false) }
-
-    // 使用单例模式获取NfcManager实例
-    val nfcManager = remember { NfcManager.getInstance(context as Activity) }
 
     // NFC状态与读卡相关
     val cardIdm by nfcManager.cardIdm.collectAsState()
     val nfcStateReceiver = remember { NfcStateBroadcastReceiver() }
 
-//    val isNfcEnabled by nfcStateReceiver.nfcState.collectAsState(
-//        initial = nfcStateReceiver.isNfcEnabled(context)
-//    )
-    var isNfcEnabled by remember { mutableStateOf(true) }
+//    var isNfcEnabled by remember { mutableStateOf(true) }
+    val isNfcEnabled by nfcStateReceiver.nfcState.collectAsState(
+        initial = nfcStateReceiver.isNfcEnabled(context)
+    )
 
     // 动画过渡的卡片背景颜色 (启用：primaryContainer，禁用：errorContainer)
     val animatedCardColor by animateColorAsState(
@@ -198,7 +194,7 @@ fun HomeScreen() {
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = animatedCardColor),
-                onClick = { isNfcEnabled = !isNfcEnabled }
+                onClick = { }
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp)
