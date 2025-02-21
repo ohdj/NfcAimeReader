@@ -15,6 +15,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,18 +27,23 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -51,12 +57,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.ohdj.nfcaimereader.R
+import org.ohdj.nfcaimereader.utils.NetworkScanner
 import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
-import org.ohdj.nfcaimereader.utils.NetworkScanner
 import org.ohdj.nfcaimereader.utils.WebSocketManager
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,6 +101,13 @@ fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
         targetValue = if (isNfcEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
     )
 
+    // 关于
+    var expanded by remember { mutableStateOf(false) }
+    var showAbout by remember { mutableStateOf(false) }
+    if (showAbout) {
+        AboutDialog(onDismiss = { showAbout = false })
+    }
+
     LaunchedEffect(Unit) {
         nfcStateReceiver.register(context)
 
@@ -106,6 +130,27 @@ fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
             TopAppBar(
                 title = {
                     Text("NfcAimeReader")
+                },
+                actions = {
+                    IconButton(onClick = { expanded = !expanded }) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = "More options"
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("关于") },
+                            onClick = {
+                                showAbout = true
+                                expanded = false
+                            }
+                        )
+                    }
                 }
             )
         },
@@ -210,7 +255,7 @@ fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
                             if (isNfcEnabled) Icons.Outlined.Check else Icons.Outlined.Close
                         Icon(
                             imageVector = nfcIcon,
-                            contentDescription = "NFC 状态图标",
+                            contentDescription = "NFC Status Icon",
                             tint = if (isNfcEnabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.size(24.dp)
                         )
@@ -218,7 +263,7 @@ fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
                         Spacer(modifier = Modifier.width(16.dp))
 
                         Text(
-                            text = if (isNfcEnabled) "NFC 已启用" else "NFC 被禁用",
+                            text = if (isNfcEnabled) "NFC 已启用" else "NFC 已禁用",
                             color = if (isNfcEnabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
                             fontSize = 16.sp
                         )
@@ -233,14 +278,14 @@ fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
                         Column {
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "Last Card ID: ${cardIdm ?: ""}",
+                                text = "卡号: ${cardIdm ?: ""}",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = if (isNfcEnabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
                             )
                         }
                     }
 
-                    // NFC 被禁用时显示 “去启用 NFC” 按钮
+                    // NFC 已禁用时显示 “去启用 NFC” 按钮
                     AnimatedVisibility(
                         visible = !isNfcEnabled,
                         enter = fadeIn() + expandVertically(),
@@ -259,12 +304,76 @@ fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                    contentDescription = "向右箭头",
+                                    contentDescription = "ArrowForward",
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AboutDialog(
+    onDismiss: () -> Unit
+) {
+    BasicAlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(24.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_launcher_background),
+                    contentDescription = "App Icon",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(MaterialTheme.shapes.medium)
+                )
+
+                Spacer(modifier = Modifier.width(24.dp))
+
+                Column {
+                    Text(
+                        text = stringResource(id = R.string.app_name),
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Text(
+                        text = "v0.0.3",
+                        fontSize = 14.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(buildAnnotatedString {
+                        append("在 ")
+                        withLink(
+                            LinkAnnotation.Url(
+                                url = "https://github.com/ohdj/NfcAimeReader",
+                                styles = TextLinkStyles(
+                                    style = SpanStyle(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        textDecoration = TextDecoration.Underline,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                            )
+                        ) {
+                            append("GitHub")
+                        }
+                        append(" 查看源码")
+                    })
                 }
             }
         }
