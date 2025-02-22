@@ -51,8 +51,16 @@ felica.txt (IDm) 和 ACCESS CODE 的转换是 Allnet 服务器实现的，而官
 
 ## :heart: 鸣谢
 
-1. aimeio 原实现来源于 [aimeio-multi](https://github.com/Nat-Lab/aimeio-multi)
+1. aimeio 原实现来源于 [ppc/AMNet](https://gitea.tendokyu.moe/ppc/amnet)
 
-2. Aime 卡片识别行为参考自 [Mageki](https://github.com/Sanheiii/Mageki/blob/master/Mageki/Mageki/Drawables/SettingButton.cs#L172-L187)
+   Derived from AGPLv3 codebase / 基于 AGPLv3 代码修改
+
+2. Aime 卡片识别行为参考自 [Sanheiii/Mageki](https://github.com/Sanheiii/Mageki/blob/master/Mageki/Mageki/Drawables/SettingButton.cs#L172-L187)
 
 部分代码来自 GPT-4o、Claude 3.5 Sonnet ~~（其实 copy 了很多）~~
+
+## License
+
+The [NfcAimeReaderDLL](NfcAimeReaderDLL) part of this project is licensed under the [AGPLv3](NfcAimeReaderDLL/LICENSE) or later.
+
+Other parts of this project remain under the [WTFPL](LICENSE) license.
