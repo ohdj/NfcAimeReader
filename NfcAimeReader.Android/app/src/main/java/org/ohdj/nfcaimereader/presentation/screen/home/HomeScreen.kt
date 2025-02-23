@@ -83,6 +83,10 @@ fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
     var isScaning by remember { mutableStateOf(false) }
     val networkScanner = remember { NetworkScanner() }
 
+    // 观察网络扫描状态
+    val currentIp by networkScanner.currentScanningIp.collectAsState()
+    val foundIp by networkScanner.foundServerIp.collectAsState()
+
     // NFC状态与读卡相关
     val cardIdm by nfcManager.cardIdm.collectAsState()
     val nfcStateReceiver = remember { NfcStateBroadcastReceiver() }
@@ -183,7 +187,7 @@ fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
-                onClick = { isScaning = !isScaning }
+                onClick = { }
             ) {
                 AnimatedContent(
                     targetState = isScaning,
@@ -205,31 +209,53 @@ fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (!targetIsScaning) {
+                        if (targetIsScaning) {
+                            // 如果扫描成功，则显示成功信息
+                            if (foundIp != null) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Check,
+                                    contentDescription = "Success",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    text = "扫描成功：服务器地址 $foundIp",
+                                    fontSize = 16.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            } else {
+                                // 正在扫描时显示正在扫描的IP
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .width(24.dp)
+                                        .height(24.dp),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    trackColor = MaterialTheme.colorScheme.surfaceDim,
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    text = "正在扫描服务器\n当前扫描IP: ${currentIp ?: "等待中..."}",
+                                    fontSize = 16.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        } else {
+                            // 未扫描状态
                             Icon(
-                                modifier = Modifier.padding(8.dp),
                                 imageVector = Icons.Outlined.Info,
                                 contentDescription = "Server Status Icon",
-                                tint = MaterialTheme.colorScheme.onSurface
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(8.dp)
                             )
-                        } else {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .width(24.dp)
-                                    .height(24.dp),
-                                color = MaterialTheme.colorScheme.onSurface,
-                                trackColor = MaterialTheme.colorScheme.surfaceDim,
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                text = "未开始扫描服务器",
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        Text(
-                            text = if (!targetIsScaning) "未配置服务器" else "正在扫描服务器",
-                            fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
                     }
                 }
             }

@@ -7,6 +7,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -19,6 +21,11 @@ class NetworkScanner {
     @Volatile
     private var found = false
 
+    // 找到服务器的IP
+    val foundServerIp = MutableStateFlow<String?>(null)
+    private val _currentScanningIp = MutableStateFlow<String?>(null)
+    val currentScanningIp = _currentScanningIp.asStateFlow()
+
     // 扫描局域网内的websocket服务器，优先尝试DataStore中保存的服务器
     fun startScan(context: Context, webSocketManager: WebSocketManager) {
         scanScope.launch {
@@ -29,6 +36,7 @@ class NetworkScanner {
                     if (webSocketManager.connectToServer(lastIp, port)) {
                         DataStoreManager.saveLastConnected(context, lastIp, port)
                         found = true
+                        foundServerIp.value = lastIp
                         return@launch
                     } else {
                         // 在该IP尝试 14514-14517
@@ -36,6 +44,7 @@ class NetworkScanner {
                             if (webSocketManager.connectToServer(lastIp, p)) {
                                 DataStoreManager.saveLastConnected(context, lastIp, p)
                                 found = true
+                                foundServerIp.value = lastIp
                                 return@launch
                             }
                         }
@@ -56,11 +65,13 @@ class NetworkScanner {
                 for (port in 14514..14517) {
                     if (found) break
                     jobs += launch {
+                        _currentScanningIp.value = ip
                         if (!found && webSocketManager.connectToServer(ip, port)) {
                             withContext(NonCancellable) {
                                 DataStoreManager.saveLastConnected(context, ip, port)
                             }
                             found = true
+                            foundServerIp.value = ip
                             // 取消其他扫描任务
                             scanScope.coroutineContext.cancelChildren()
                         }
