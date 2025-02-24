@@ -15,6 +15,7 @@ fun SettingScreen(viewModel: SettingViewModel) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         viewModel.loadAutoReconnect(context)
+        viewModel.loadUseSystemTheme(context)
     }
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -27,6 +28,15 @@ fun SettingScreen(viewModel: SettingViewModel) {
             Switch(
                 checked = viewModel.autoReconnect.collectAsState().value,
                 onCheckedChange = { viewModel.setAutoReconnect(context, it) }
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "使用系统主题颜色")
+            Spacer(modifier = Modifier.width(8.dp))
+            Switch(
+                checked = viewModel.useSystemTheme.collectAsState().value,
+                onCheckedChange = { viewModel.setUseSystemTheme(context, it) }
             )
         }
     }
