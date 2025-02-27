@@ -54,6 +54,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,7 +81,7 @@ import org.ohdj.nfcaimereader.utils.WebSocketManager
 @Composable
 fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
     val context = LocalContext.current
-    var isScaning by remember { mutableStateOf(false) }
+    var isScaning by rememberSaveable { mutableStateOf(false) }
     val networkScanner = remember { NetworkScanner() }
 
     // 观察网络扫描状态
