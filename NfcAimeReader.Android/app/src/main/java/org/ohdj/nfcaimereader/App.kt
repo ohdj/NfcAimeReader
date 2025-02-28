@@ -26,11 +26,12 @@ import org.ohdj.nfcaimereader.presentation.screen.home.HomeScreen
 import org.ohdj.nfcaimereader.presentation.screen.home.HomeViewModel
 import org.ohdj.nfcaimereader.presentation.screen.setting.SettingScreen
 import org.ohdj.nfcaimereader.presentation.screen.setting.SettingViewModel
+import org.ohdj.nfcaimereader.presentation.screen.settings.SettingsScreen
 import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.WebSocketManager
 
 @Composable
-fun App(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
+fun App(nfcManager: NfcManager, webSocketManager: WebSocketManager, appViewModel: AppViewModel) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -52,9 +53,8 @@ fun App(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
                     val viewModel: CardViewModel = viewModel()
                     CardScreen(viewModel)
                 }
-                composable("setting") {
-                    val viewModel: SettingViewModel = viewModel()
-                    SettingScreen(viewModel)
+                composable("settings") {
+                    SettingsScreen(appViewModel)
                 }
             }
         }
@@ -92,16 +92,16 @@ fun BottomNavigationBar(navController: NavHostController) {
             icon = { Icon(Icons.Default.AddCircle, contentDescription = "card") }
         )
         NavigationBarItem(
-            selected = currentDestination == "setting",
+            selected = currentDestination == "settings",
             onClick = {
-                navController.navigate("setting") {
+                navController.navigate("settings") {
                     popUpTo(navController.graph.startDestinationId) { saveState = true }
                     launchSingleTop = true
                     restoreState = true
                 }
             },
             label = { Text("设置") },
-            icon = { Icon(Icons.Default.Settings, contentDescription = "setting") }
+            icon = { Icon(Icons.Default.Settings, contentDescription = "settings") }
         )
     }
 }

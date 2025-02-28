@@ -1,16 +1,19 @@
 package org.ohdj.nfcaimereader
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.runBlocking
 import org.ohdj.nfcaimereader.ui.theme.NfcAimeReaderTheme
 import org.ohdj.nfcaimereader.utils.DataStoreManager
@@ -36,24 +39,27 @@ class MainActivity : ComponentActivity() {
         nfcManager = NfcManager(this)
         webSocketManager = WebSocketManager()
 
-        // 同步读取 DataStore 中存储的设置，确保在 setContent 中使用正确的初始值，避免应用启动时瞬间切换主题
-        val useSystemThemeInitial = runBlocking {
-            DataStoreManager.getUseSystemTheme(this@MainActivity)
-        }
-
         setContent {
-            // 使用从 DataStore 读取到的初始值作为 collectAsState 的 initial 值
-            val useSystemTheme by DataStoreManager.getUseSystemThemeFlow(this@MainActivity)
-                .collectAsState(initial = useSystemThemeInitial)
+            val viewModel: AppViewModel = viewModel()
+            val themeMode by viewModel.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
+            val dynamicColorEnabled by viewModel.dynamicColorEnabled.collectAsState(initial = false)
+
+            val darkTheme = when (themeMode) {
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            }
+
+            val supportsDynamicTheming = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
             NfcAimeReaderTheme(
-                darkTheme = androidx.compose.foundation.isSystemInDarkTheme(),
-                dynamicColor = useSystemTheme
+                darkTheme = darkTheme,
+                dynamicColor = supportsDynamicTheming && dynamicColorEnabled
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.surface
                 ) {
-                    App(nfcManager, webSocketManager)
+                    App(nfcManager, webSocketManager, viewModel)
                 }
             }
         }
