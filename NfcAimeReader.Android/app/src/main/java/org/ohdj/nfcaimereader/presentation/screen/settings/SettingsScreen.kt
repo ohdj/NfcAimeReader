@@ -2,9 +2,7 @@ package org.ohdj.nfcaimereader.presentation.screen.settings
 
 import android.os.Build
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -39,43 +37,24 @@ fun SettingsScreen(viewModel: AppViewModel) {
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "外观设置",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
+            Text(
+                text = "主题",
+                color = MaterialTheme.colorScheme.primary
+            )
 
-                    SettingsSwitchItem(
-                        title = "动态取色",
-                        description = "使用您的壁纸颜色来美化应用",
-                        checked = dynamicColorEnabled,
-                        enabled = supportsDynamicTheming,
-                        onCheckedChange = { viewModel.updateDynamicColorEnabled(it) }
-                    )
+            SettingsSwitchItem(
+                title = "动态取色",
+                description = "使用系统提供的配色方案",
+                checked = dynamicColorEnabled,
+                enabled = supportsDynamicTheming,
+                errorMessage = if (!supportsDynamicTheming) "此功能需要 Android 12 +" else null,
+                onCheckedChange = { viewModel.updateDynamicColorEnabled(it) }
+            )
 
-                    if (!supportsDynamicTheming) {
-                        Text(
-                            text = "此功能需要 Android 12 +",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
-                        )
-                    }
-
-                    SettingsThemeItem(
-                        currentTheme = themeMode,
-                        onThemeSelected = { viewModel.updateThemeMode(it) }
-                    )
-                }
-            }
+            SettingsThemeItem(
+                currentTheme = themeMode,
+                onThemeSelected = { viewModel.updateThemeMode(it) }
+            )
         }
     }
 }
