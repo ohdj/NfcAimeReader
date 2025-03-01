@@ -327,12 +327,16 @@ fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = animatedButtonColor)
                             ) {
-                                Text("去启用 NFC")
+                                Text(
+                                    text = "去启用 NFC",
+                                    color = MaterialTheme.colorScheme.onError
+                                )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                     contentDescription = "ArrowForward",
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(20.dp),
+                                    tint = MaterialTheme.colorScheme.onError
                                 )
                             }
                         }
