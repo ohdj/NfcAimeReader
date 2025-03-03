@@ -1,4 +1,4 @@
-package org.ohdj.nfcaimereader.presentation.screen.settings.components
+package org.ohdj.nfcaimereader.screen.setting.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun SettingsSwitchItem(
+fun SettingSwitchItem(
     title: String,
     description: String,
     checked: Boolean,

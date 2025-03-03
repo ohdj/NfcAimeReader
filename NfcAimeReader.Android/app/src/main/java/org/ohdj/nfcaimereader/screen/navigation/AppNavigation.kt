@@ -1,4 +1,4 @@
-package org.ohdj.nfcaimereader.presentation.screen.navigation
+package org.ohdj.nfcaimereader.screen.navigation
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar

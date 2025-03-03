@@ -17,11 +17,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import org.ohdj.nfcaimereader.presentation.screen.card.CardScreen
-import org.ohdj.nfcaimereader.presentation.screen.home.HomeScreen
-import org.ohdj.nfcaimereader.presentation.screen.navigation.AppNavigation
-import org.ohdj.nfcaimereader.presentation.screen.navigation.Screen
-import org.ohdj.nfcaimereader.presentation.screen.settings.SettingsScreen
+import org.ohdj.nfcaimereader.screen.card.CardScreen
+import org.ohdj.nfcaimereader.screen.home.HomeScreen
+import org.ohdj.nfcaimereader.screen.navigation.AppNavigation
+import org.ohdj.nfcaimereader.screen.navigation.Screen
+import org.ohdj.nfcaimereader.screen.setting.SettingScreen
 import org.ohdj.nfcaimereader.ui.theme.NfcAimeReaderTheme
 import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.WebSocketManager
@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
 
-            val viewModel: AppViewModel = viewModel()
+            val viewModel: UserPreferenceViewModel = viewModel()
             val themeMode by viewModel.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
             val dynamicColorEnabled by viewModel.dynamicColorEnabled.collectAsState(initial = false)
 
@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
                             CardScreen()
                         }
                         composable(Screen.Settings.route) {
-                            SettingsScreen(viewModel)
+                            SettingScreen(viewModel)
                         }
                     }
                 }

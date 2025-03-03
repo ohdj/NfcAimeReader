@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 
 private val Application.dataStore by preferencesDataStore(name = "settings")
 
-class AppViewModel(application: Application) : AndroidViewModel(application) {
+class UserPreferenceViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dataStore = application.dataStore
 

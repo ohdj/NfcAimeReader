@@ -1,4 +1,4 @@
-package org.ohdj.nfcaimereader.presentation.screen.settings.components
+package org.ohdj.nfcaimereader.screen.setting.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import org.ohdj.nfcaimereader.ThemeMode
 
 @Composable
-fun SettingsThemeItem(
+fun SettingThemeItem(
     currentTheme: ThemeMode,
     onThemeSelected: (ThemeMode) -> Unit
 ) {
