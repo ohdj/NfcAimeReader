@@ -8,11 +8,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun CardScreen(viewModel: CardViewModel) {
+fun CardScreen() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = viewModel.text)
+        Text(text = "这是卡片页面的内容")
     }
 }

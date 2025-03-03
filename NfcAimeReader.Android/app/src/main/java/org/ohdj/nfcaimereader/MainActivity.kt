@@ -7,16 +7,22 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.runBlocking
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import org.ohdj.nfcaimereader.presentation.screen.card.CardScreen
+import org.ohdj.nfcaimereader.presentation.screen.home.HomeScreen
+import org.ohdj.nfcaimereader.presentation.screen.navigation.AppNavigation
+import org.ohdj.nfcaimereader.presentation.screen.navigation.Screen
+import org.ohdj.nfcaimereader.presentation.screen.settings.SettingsScreen
 import org.ohdj.nfcaimereader.ui.theme.NfcAimeReaderTheme
-import org.ohdj.nfcaimereader.utils.DataStoreManager
 import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.WebSocketManager
 
@@ -40,6 +46,10 @@ class MainActivity : ComponentActivity() {
         webSocketManager = WebSocketManager()
 
         setContent {
+            val navController = rememberNavController()
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
+
             val viewModel: AppViewModel = viewModel()
             val themeMode by viewModel.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
             val dynamicColorEnabled by viewModel.dynamicColorEnabled.collectAsState(initial = false)
@@ -55,11 +65,39 @@ class MainActivity : ComponentActivity() {
                 darkTheme = darkTheme,
                 dynamicColor = supportsDynamicTheming && dynamicColorEnabled
             ) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.surface
-                ) {
-                    App(nfcManager, webSocketManager, viewModel)
+                Scaffold(
+                    bottomBar = {
+                        AppNavigation(
+                            currentRoute = currentRoute,
+                            onNavigate = { route ->
+                                navController.navigate(route) {
+                                    navController.graph.startDestinationRoute?.let { startRoute ->
+                                        popUpTo(startRoute) {
+                                            saveState = true
+                                        }
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        )
+                    }
+                ) { innerPadding ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = Screen.Home.route,
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        composable(Screen.Home.route) {
+                            HomeScreen(nfcManager, webSocketManager)
+                        }
+                        composable(Screen.Card.route) {
+                            CardScreen()
+                        }
+                        composable(Screen.Settings.route) {
+                            SettingsScreen(viewModel)
+                        }
+                    }
                 }
             }
         }
