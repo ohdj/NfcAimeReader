@@ -1,4 +1,4 @@
-package org.ohdj.nfcaimereader
+package org.ohdj.nfcaimereader.data.preference
 
 import android.app.Application
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import org.ohdj.nfcaimereader.ThemeMode
 
 private val Application.dataStore by preferencesDataStore(name = "settings")
 

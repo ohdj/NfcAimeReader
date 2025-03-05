@@ -1,4 +1,4 @@
-package org.ohdj.nfcaimereader.screen.setting
+package org.ohdj.nfcaimereader.ui.screen.setting
 
 import android.os.Build
 import androidx.compose.foundation.layout.Column
@@ -13,10 +13,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.ohdj.nfcaimereader.UserPreferenceViewModel
+import org.ohdj.nfcaimereader.data.preference.UserPreferenceViewModel
 import org.ohdj.nfcaimereader.ThemeMode
-import org.ohdj.nfcaimereader.screen.setting.component.SettingSwitchItem
-import org.ohdj.nfcaimereader.screen.setting.component.SettingThemeItem
+import org.ohdj.nfcaimereader.ui.screen.setting.component.SettingSwitchItem
+import org.ohdj.nfcaimereader.ui.screen.setting.component.SettingThemeItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

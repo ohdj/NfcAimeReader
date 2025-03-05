@@ -1,4 +1,4 @@
-package org.ohdj.nfcaimereader.screen.card
+package org.ohdj.nfcaimereader.ui.screen.card
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

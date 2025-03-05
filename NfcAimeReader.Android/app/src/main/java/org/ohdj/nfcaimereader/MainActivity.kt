@@ -17,18 +17,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import org.ohdj.nfcaimereader.screen.card.CardScreen
-import org.ohdj.nfcaimereader.screen.home.HomeScreen
-import org.ohdj.nfcaimereader.screen.navigation.AppNavigationBar
-import org.ohdj.nfcaimereader.screen.navigation.Screen
-import org.ohdj.nfcaimereader.screen.setting.SettingScreen
+import org.ohdj.nfcaimereader.data.preference.UserPreferenceViewModel
+import org.ohdj.nfcaimereader.ui.screen.card.CardScreen
+import org.ohdj.nfcaimereader.ui.screen.home.HomeScreen
+import org.ohdj.nfcaimereader.ui.navigation.AppNavigationBar
+import org.ohdj.nfcaimereader.ui.screen.Screen
+import org.ohdj.nfcaimereader.ui.screen.setting.SettingScreen
 import org.ohdj.nfcaimereader.ui.theme.NfcAimeReaderTheme
 import org.ohdj.nfcaimereader.utils.NfcManager
-import org.ohdj.nfcaimereader.utils.WebSocketManager
 
 class MainActivity : ComponentActivity() {
     private lateinit var nfcManager: NfcManager
-    private lateinit var webSocketManager: WebSocketManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(
@@ -43,7 +42,6 @@ class MainActivity : ComponentActivity() {
         )
         super.onCreate(savedInstanceState)
         nfcManager = NfcManager(this)
-        webSocketManager = WebSocketManager()
 
         setContent {
             val navController = rememberNavController()
@@ -89,7 +87,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable(Screen.Home.route) {
-                            HomeScreen(nfcManager, webSocketManager)
+                            HomeScreen(nfcManager)
                         }
                         composable(Screen.Card.route) {
                             CardScreen()

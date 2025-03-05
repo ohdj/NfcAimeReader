@@ -1,4 +1,4 @@
-package org.ohdj.nfcaimereader.screen.navigation
+package org.ohdj.nfcaimereader.ui.screen
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle

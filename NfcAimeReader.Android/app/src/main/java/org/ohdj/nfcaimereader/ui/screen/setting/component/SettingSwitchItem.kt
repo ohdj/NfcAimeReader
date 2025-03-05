@@ -1,4 +1,4 @@
-package org.ohdj.nfcaimereader.screen.setting.component
+package org.ohdj.nfcaimereader.ui.screen.setting.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

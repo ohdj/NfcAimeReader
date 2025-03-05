@@ -1,20 +1,13 @@
-package org.ohdj.nfcaimereader.screen.home
+package org.ohdj.nfcaimereader.ui.screen.home
 
 import android.content.Intent
 import android.provider.Settings
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,20 +21,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,7 +43,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,21 +60,13 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.ohdj.nfcaimereader.R
-import org.ohdj.nfcaimereader.utils.NetworkScanner
 import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
-import org.ohdj.nfcaimereader.utils.WebSocketManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
+fun HomeScreen(nfcManager: NfcManager) {
     val context = LocalContext.current
-    var isScaning by rememberSaveable { mutableStateOf(false) }
-    val networkScanner = remember { NetworkScanner() }
-
-    // 观察网络扫描状态
-    val currentIp by networkScanner.currentScanningIp.collectAsState()
-    val foundIp by networkScanner.foundServerIp.collectAsState()
 
     // NFC状态与读卡相关
     val cardIdm by nfcManager.cardIdm.collectAsState()
@@ -158,111 +138,11 @@ fun HomeScreen(nfcManager: NfcManager, webSocketManager: WebSocketManager) {
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            AnimatedVisibility(
-                visible = !isScaning,
-                enter = scaleIn(),
-                exit = scaleOut()
-            ) {
-                ExtendedFloatingActionButton(
-                    text = { Text("扫描服务器") },
-                    icon = { Icon(Icons.Filled.Search, contentDescription = "Scan Server") },
-                    onClick = {
-                        isScaning = true
-                        networkScanner.startScan(context, webSocketManager)
-                    }
-                )
-            }
-        },
+        }
     ) { contentPadding ->
         Column(
             modifier = Modifier.padding(contentPadding)
         ) {
-            // 服务器状态
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                ),
-                onClick = { }
-            ) {
-                AnimatedContent(
-                    targetState = isScaning,
-                    transitionSpec = {
-                        if (targetState) {
-                            // 开始扫描：旧内容向上滑出，新内容从下向上滑入
-                            (slideInVertically(initialOffsetY = { height -> height }) + fadeIn()).togetherWith(
-                                slideOutVertically(targetOffsetY = { height -> -height }) + fadeOut()
-                            )
-                        } else {
-                            // 结束扫描：旧内容向下滑出，新内容从上向下滑入
-                            (slideInVertically(initialOffsetY = { height -> -height }) + fadeIn()).togetherWith(
-                                slideOutVertically(targetOffsetY = { height -> height }) + fadeOut()
-                            )
-                        }.using(SizeTransform(clip = false))
-                    }
-                ) { targetIsScaning ->
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (targetIsScaning) {
-                            // 如果扫描成功，则显示成功信息
-                            if (foundIp != null) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Check,
-                                    contentDescription = "Success",
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.padding(8.dp)
-                                )
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Text(
-                                    text = "扫描成功：服务器地址 $foundIp",
-                                    fontSize = 16.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            } else {
-                                // 正在扫描时显示正在扫描的IP
-                                CircularProgressIndicator(
-                                    modifier = Modifier
-                                        .padding(8.dp)
-                                        .width(24.dp)
-                                        .height(24.dp),
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    trackColor = MaterialTheme.colorScheme.surfaceDim,
-                                )
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Text(
-                                    text = "正在扫描服务器\n当前扫描IP: ${currentIp ?: "等待中..."}",
-                                    fontSize = 16.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        } else {
-                            // 未扫描状态
-                            Icon(
-                                imageVector = Icons.Outlined.Info,
-                                contentDescription = "Server Status Icon",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.padding(8.dp)
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Text(
-                                text = "未开始扫描服务器",
-                                fontSize = 16.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             // NFC 状态
             Card(
                 modifier = Modifier
