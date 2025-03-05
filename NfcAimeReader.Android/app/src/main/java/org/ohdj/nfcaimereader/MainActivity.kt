@@ -19,7 +19,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.ohdj.nfcaimereader.screen.card.CardScreen
 import org.ohdj.nfcaimereader.screen.home.HomeScreen
-import org.ohdj.nfcaimereader.screen.navigation.AppNavigation
+import org.ohdj.nfcaimereader.screen.navigation.AppNavigationBar
 import org.ohdj.nfcaimereader.screen.navigation.Screen
 import org.ohdj.nfcaimereader.screen.setting.SettingScreen
 import org.ohdj.nfcaimereader.ui.theme.NfcAimeReaderTheme
@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
             ) {
                 Scaffold(
                     bottomBar = {
-                        AppNavigation(
+                        AppNavigationBar(
                             currentRoute = currentRoute,
                             onNavigate = { route ->
                                 navController.navigate(route) {
