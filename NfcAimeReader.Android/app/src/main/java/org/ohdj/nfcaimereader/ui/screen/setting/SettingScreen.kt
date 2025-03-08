@@ -13,7 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.ohdj.nfcaimereader.data.preference.UserPreferenceViewModel
+import org.ohdj.nfcaimereader.data.datastore.UserPreferenceViewModel
 import org.ohdj.nfcaimereader.ThemeMode
 import org.ohdj.nfcaimereader.ui.screen.setting.component.SettingSwitchItem
 import org.ohdj.nfcaimereader.ui.screen.setting.component.SettingThemeItem

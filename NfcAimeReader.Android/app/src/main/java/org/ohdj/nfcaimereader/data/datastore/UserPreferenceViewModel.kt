@@ -1,4 +1,4 @@
-package org.ohdj.nfcaimereader.data.preference
+package org.ohdj.nfcaimereader.data.datastore
 
 import android.app.Application
 import androidx.datastore.preferences.core.booleanPreferencesKey

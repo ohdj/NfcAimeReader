@@ -17,12 +17,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import org.ohdj.nfcaimereader.data.preference.UserPreferenceViewModel
+import org.ohdj.nfcaimereader.data.datastore.UserPreferenceViewModel
 import org.ohdj.nfcaimereader.ui.screen.card.CardScreen
 import org.ohdj.nfcaimereader.ui.screen.home.HomeScreen
 import org.ohdj.nfcaimereader.ui.navigation.AppNavigationBar
 import org.ohdj.nfcaimereader.ui.screen.Screen
 import org.ohdj.nfcaimereader.ui.screen.setting.SettingScreen
+import org.ohdj.nfcaimereader.ui.screen.websocket.WebSocketDetailScreen
 import org.ohdj.nfcaimereader.ui.theme.NfcAimeReaderTheme
 import org.ohdj.nfcaimereader.utils.NfcManager
 

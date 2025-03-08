@@ -9,9 +9,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.BasicAlertDialog
@@ -55,17 +58,25 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import org.ohdj.nfcaimereader.R
+import org.ohdj.nfcaimereader.ui.screen.home.component.WebSocketStatusComponent
+import org.ohdj.nfcaimereader.ui.viewmodel.WebSocketViewModel
 import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(nfcManager: NfcManager) {
+fun HomeScreen(
+    nfcManager: NfcManager,
+    navigateToWebSocketDetail: () -> Unit,
+    viewModel: WebSocketViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
 
     // NFC状态与读卡相关
@@ -219,6 +230,50 @@ fun HomeScreen(nfcManager: NfcManager) {
                                     tint = MaterialTheme.colorScheme.onError
                                 )
                             }
+                        }
+                    }
+                }
+            }
+
+            val connectionState by viewModel.connectionState.collectAsState()
+
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text("WebSocket 管理器") },
+                        actions = {
+                            IconButton(onClick = navigateToWebSocketDetail) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "设置"
+                                )
+                            }
+                        }
+                    )
+                }
+            ) { paddingValues ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        WebSocketStatusComponent(
+                            connectionState = connectionState,
+                            onClick = navigateToWebSocketDetail
+                        )
+
+                        if (!connectionState.isConnected && connectionState.serverInfo == null) {
+                            Text(
+                                text = "点击上方卡片配置 WebSocket 服务器",
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(16.dp)
+                            )
                         }
                     }
                 }
