@@ -10,18 +10,15 @@ internal static class Config
 
     static Config()
     {
-        //GameId = ReadKey(IOSection, "gameId", 4);
         ServerAddress = ReadKey(IOSection, "serverAddress", 1024, "0.0.0.0");
         ServerPort = ReadKey(IOSection, "serverPort", 1024, "6071");
     }
 
-    //public static string GameId { get; }
     
     public static string ServerPort { get; }
     
     public static string ServerAddress { get; }
     
-    //public static Version ServerVersion { get; } = new(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "1.0");
 
     //读取键值 From segatools.ini
     internal static unsafe string ReadKey(string section, string key, uint maxLength, string @default = null)
