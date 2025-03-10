@@ -25,12 +25,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import org.ohdj.nfcaimereader.model.ConnectionState
+import org.ohdj.nfcaimereader.ui.navigation.Screen
 
 @Composable
 fun WebSocketStatusComponent(
     connectionState: ConnectionState,
-    onClick: () -> Unit
+    navController: NavController,
 ) {
     val backgroundColor by animateColorAsState(
         if (connectionState.isConnected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
@@ -40,7 +42,7 @@ fun WebSocketStatusComponent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clickable { onClick() },
+            .clickable { navController.navigate(Screen.Config.route) },
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor)
     ) {

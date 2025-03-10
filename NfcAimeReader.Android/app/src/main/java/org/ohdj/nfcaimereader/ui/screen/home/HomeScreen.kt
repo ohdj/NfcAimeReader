@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import org.ohdj.nfcaimereader.ui.screen.home.component.WebSocketStatusComponent
 import org.ohdj.nfcaimereader.ui.viewmodel.WebSocketViewModel
 import org.ohdj.nfcaimereader.utils.NfcManager
@@ -47,7 +48,7 @@ import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
 @Composable
 fun HomeScreen(
     nfcManager: NfcManager,
-    navigateToWebSocketDetail: () -> Unit,
+    navController: NavController,
     viewModel: WebSocketViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -88,11 +89,11 @@ fun HomeScreen(
 //    }
 
     Column {
-        // NFC
+        // NFC 状态
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = animatedCardColor),
             onClick = { }
@@ -169,13 +170,12 @@ fun HomeScreen(
             }
         }
 
-        Spacer(Modifier.padding(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Websocket
         val connectionState by viewModel.connectionState.collectAsState()
         WebSocketStatusComponent(
             connectionState = connectionState,
-            onClick = navigateToWebSocketDetail
+            navController = navController
         )
     }
 }
