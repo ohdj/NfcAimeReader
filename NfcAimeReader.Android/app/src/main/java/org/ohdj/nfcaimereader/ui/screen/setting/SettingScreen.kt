@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.ohdj.nfcaimereader.ThemeMode
@@ -42,7 +43,9 @@ fun SettingScreenContent(
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
             text = "主题",
-            color = MaterialTheme.colorScheme.primary
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 8.dp)
         )
         SettingSwitchItem(
             title = "动态取色",

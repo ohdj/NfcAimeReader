@@ -29,7 +29,8 @@ fun SettingThemeItem(
         Text(
             text = "深色模式",
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(bottom = 8.dp)
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 4.dp)
         )
 
         Text(
