@@ -24,15 +24,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import org.ohdj.nfcaimereader.model.ConnectionState
-import org.ohdj.nfcaimereader.ui.navigation.Screen
+import org.ohdj.nfcaimereader.model.WebSocketServerInfo
 
 @Composable
 fun WebSocketStatusComponent(
     connectionState: ConnectionState,
-    navController: NavController,
+    onClick: () -> Unit,
 ) {
     val backgroundColor by animateColorAsState(
         if (connectionState.isConnected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
@@ -42,7 +42,7 @@ fun WebSocketStatusComponent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clickable { navController.navigate(Screen.Config.route) },
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor)
     ) {
@@ -81,7 +81,7 @@ fun WebSocketStatusComponent(
                         } ?: "未配置服务器"
                     },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -91,4 +91,43 @@ fun WebSocketStatusComponent(
             )
         }
     }
+}
+
+@Preview
+@Composable
+fun WebSocketStatusConnectedPreview() {
+    WebSocketStatusComponent(
+        connectionState = ConnectionState(
+            isConnected = true,
+            serverInfo = WebSocketServerInfo(
+                ip = "已连接到 192.168.1.100",
+                port = 14514
+            )
+        ),
+        onClick = {}
+    )
+}
+
+@Preview
+@Composable
+fun WebSocketStatusDisconnectedPreview() {
+    WebSocketStatusComponent(
+        connectionState = ConnectionState(
+            isConnected = false,
+            message = "连接失败: Connection reset"
+        ),
+        onClick = {}
+    )
+}
+
+@Preview
+@Composable
+fun WebSocketStatusNotConfiguredPreview() {
+    WebSocketStatusComponent(
+        connectionState = ConnectionState(
+            isConnected = false,
+            message = ""
+        ),
+        onClick = {}
+    )
 }
