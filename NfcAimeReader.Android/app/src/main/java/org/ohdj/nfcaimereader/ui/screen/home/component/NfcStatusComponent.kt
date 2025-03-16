@@ -62,9 +62,7 @@ fun NfcStatusComponent(isNfcEnabled: Boolean, cardIdm: String?) {
         Column(
             modifier = Modifier.padding(24.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row {
                 val nfcIcon =
                     if (isNfcEnabled) Icons.Outlined.Check else Icons.Outlined.Close
                 Icon(
@@ -79,7 +77,7 @@ fun NfcStatusComponent(isNfcEnabled: Boolean, cardIdm: String?) {
                 Text(
                     text = if (isNfcEnabled) "NFC 已启用" else "NFC 已禁用",
                     color = if (isNfcEnabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
-                    fontSize = 16.sp
+                    style = MaterialTheme.typography.titleMedium
                 )
             }
 
