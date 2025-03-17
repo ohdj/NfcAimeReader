@@ -158,7 +158,7 @@ fun NfcStatusComponent(nfcState: NfcState, cardIdm: String?) {
                 Column {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "无法使用读卡功能",
+                        text = "当前无法使用读卡功能",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

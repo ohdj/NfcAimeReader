@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -19,6 +20,8 @@ import org.ohdj.nfcaimereader.ui.screen.home.component.WebSocketStatusComponent
 import org.ohdj.nfcaimereader.ui.viewmodel.WebSocketViewModel
 import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
+import org.ohdj.nfcaimereader.utils.collectNfcStateAsState
+import org.ohdj.nfcaimereader.utils.rememberNfcStateManager
 
 @Composable
 fun HomeScreen(
@@ -29,14 +32,23 @@ fun HomeScreen(
     val context = LocalContext.current
     val nfcStateReceiver = remember { NfcStateBroadcastReceiver() }
 
+    // 创建NFC状态管理器
+    val nfcStateManager = rememberNfcStateManager(nfcManager, nfcStateReceiver)
+
+    // 只有当设备支持NFC时才注册广播接收器
     LaunchedEffect(Unit) {
-        // 如果设备支持NFC，则注册广播接收器
         if (nfcManager.isNfcSupported()) {
             nfcStateReceiver.register(context)
         }
+    }
 
-        // 刷新NFC状态
-        nfcManager.refreshNfcState()
+    // 在组件销毁时解注册广播接收器
+    DisposableEffect(Unit) {
+        onDispose {
+            if (nfcManager.isNfcSupported()) {
+                nfcStateReceiver.unregister(context)
+            }
+        }
     }
 
     // Send card ID when detected
@@ -48,15 +60,11 @@ fun HomeScreen(
 //    }
 
     Column {
-        // NFC 状态组件
+        // 获取NFC状态和卡片ID
+        val nfcState = nfcStateManager.collectNfcStateAsState(context)
         val cardIdm by nfcManager.cardIdm.collectAsState()
 
-        // 获取NFC状态，优先使用nfcManager的状态
-        val nfcState by if (nfcManager.isNfcSupported()) {
-            nfcStateReceiver.nfcState.collectAsState()
-        } else {
-            nfcManager.nfcState.collectAsState()
-        }
+        // NFC状态组件
         NfcStatusComponent(
             nfcState = nfcState,
             cardIdm = cardIdm
