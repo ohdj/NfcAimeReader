@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class NfcStateBroadcastReceiver {
-    private val _nfcState = MutableStateFlow<NfcState>(NfcState.DISABLED)
+    private val _nfcState = MutableStateFlow(false)
     val nfcState = _nfcState.asStateFlow()
 
     private val nfcStateReceiver = object : BroadcastReceiver() {
@@ -20,10 +20,7 @@ class NfcStateBroadcastReceiver {
                         NfcAdapter.EXTRA_ADAPTER_STATE,
                         NfcAdapter.STATE_OFF
                     )
-                    _nfcState.value = when (state) {
-                        NfcAdapter.STATE_ON -> NfcState.ENABLED
-                        else -> NfcState.DISABLED
-                    }
+                    _nfcState.value = state == NfcAdapter.STATE_ON
                 }
             }
         }
@@ -34,19 +31,15 @@ class NfcStateBroadcastReceiver {
         context.registerReceiver(nfcStateReceiver, filter)
 
         // Initialize the current NFC state
-        _nfcState.value = getNfcState(context)
+        _nfcState.value = isNfcEnabled(context)
     }
 
     fun unregister(context: Context) {
         context.unregisterReceiver(nfcStateReceiver)
     }
 
-    fun getNfcState(context: Context): NfcState {
+    fun isNfcEnabled(context: Context): Boolean {
         val nfcAdapter = NfcAdapter.getDefaultAdapter(context)
-        return when {
-            nfcAdapter == null -> NfcState.UNSUPPORTED
-            nfcAdapter.isEnabled -> NfcState.ENABLED
-            else -> NfcState.DISABLED
-        }
+        return nfcAdapter?.isEnabled == true
     }
 }
