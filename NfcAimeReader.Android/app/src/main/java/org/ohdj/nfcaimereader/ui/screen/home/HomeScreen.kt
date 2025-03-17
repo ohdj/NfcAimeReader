@@ -30,12 +30,13 @@ fun HomeScreen(
     val nfcStateReceiver = remember { NfcStateBroadcastReceiver() }
 
     LaunchedEffect(Unit) {
-        nfcStateReceiver.register(context)
-
-        // Check and request NFC permissions
-        if (!nfcStateReceiver.isNfcEnabled(context)) {
-            // TODO: Implement NFC enable request dialog
+        // 如果设备支持NFC，则注册广播接收器
+        if (nfcManager.isNfcSupported()) {
+            nfcStateReceiver.register(context)
         }
+
+        // 刷新NFC状态
+        nfcManager.refreshNfcState()
     }
 
     // Send card ID when detected
@@ -49,11 +50,15 @@ fun HomeScreen(
     Column {
         // NFC 状态组件
         val cardIdm by nfcManager.cardIdm.collectAsState()
-        val isNfcEnabled by nfcStateReceiver.nfcState.collectAsState(
-            initial = nfcStateReceiver.isNfcEnabled(context)
-        )
+
+        // 获取NFC状态，优先使用nfcManager的状态
+        val nfcState by if (nfcManager.isNfcSupported()) {
+            nfcStateReceiver.nfcState.collectAsState()
+        } else {
+            nfcManager.nfcState.collectAsState()
+        }
         NfcStatusComponent(
-            isNfcEnabled = isNfcEnabled,
+            nfcState = nfcState,
             cardIdm = cardIdm
         )
 

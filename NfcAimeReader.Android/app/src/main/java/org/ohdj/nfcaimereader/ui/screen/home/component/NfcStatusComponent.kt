@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -35,22 +36,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import org.ohdj.nfcaimereader.utils.NfcState
 
 @Composable
-fun NfcStatusComponent(isNfcEnabled: Boolean, cardIdm: String?) {
+fun NfcStatusComponent(nfcState: NfcState, cardIdm: String?) {
     val context = LocalContext.current
 
-    // 动画过渡的卡片背景颜色 (启用：primaryContainer，禁用：errorContainer)
+    // 动画过渡的卡片背景颜色
     val animatedCardColor by animateColorAsState(
-        targetValue = if (isNfcEnabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
-    )
-    // 动画过渡的按钮颜色 (启用：primary，禁用：error)
-    val animatedButtonColor by animateColorAsState(
-        targetValue = if (isNfcEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+        targetValue = when (nfcState) {
+            NfcState.ENABLED -> MaterialTheme.colorScheme.primaryContainer
+            NfcState.DISABLED -> MaterialTheme.colorScheme.errorContainer
+            NfcState.UNSUPPORTED -> MaterialTheme.colorScheme.surfaceVariant
+        }
     )
 
-    // NFC 状态
+    // 动画过渡的按钮颜色
+    val animatedButtonColor by animateColorAsState(
+        targetValue = when (nfcState) {
+            NfcState.ENABLED -> MaterialTheme.colorScheme.primary
+            NfcState.DISABLED -> MaterialTheme.colorScheme.error
+            NfcState.UNSUPPORTED -> MaterialTheme.colorScheme.outline
+        }
+    )
+
+    // NFC 状态卡片
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -62,28 +72,40 @@ fun NfcStatusComponent(isNfcEnabled: Boolean, cardIdm: String?) {
         Column(
             modifier = Modifier.padding(24.dp)
         ) {
-            Row {
-                val nfcIcon =
-                    if (isNfcEnabled) Icons.Outlined.Check else Icons.Outlined.Close
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // 根据NFC状态显示不同图标
+                val (icon, iconTint) = when (nfcState) {
+                    NfcState.ENABLED -> Icons.Outlined.Check to MaterialTheme.colorScheme.onPrimaryContainer
+                    NfcState.DISABLED -> Icons.Outlined.Close to MaterialTheme.colorScheme.onErrorContainer
+                    NfcState.UNSUPPORTED -> Icons.Outlined.Warning to MaterialTheme.colorScheme.onSurfaceVariant
+                }
+
                 Icon(
-                    imageVector = nfcIcon,
+                    imageVector = icon,
                     contentDescription = "NFC Status Icon",
-                    tint = if (isNfcEnabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
+                    tint = iconTint,
                     modifier = Modifier.size(24.dp)
                 )
 
                 Spacer(modifier = Modifier.width(16.dp))
 
+                // 根据NFC状态显示不同文本
+                val (statusText, textColor) = when (nfcState) {
+                    NfcState.ENABLED -> "NFC 已启用" to MaterialTheme.colorScheme.onPrimaryContainer
+                    NfcState.DISABLED -> "NFC 已禁用" to MaterialTheme.colorScheme.onErrorContainer
+                    NfcState.UNSUPPORTED -> "设备不支持 NFC" to MaterialTheme.colorScheme.onSurfaceVariant
+                }
+
                 Text(
-                    text = if (isNfcEnabled) "NFC 已启用" else "NFC 已禁用",
-                    color = if (isNfcEnabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
+                    text = statusText,
+                    color = textColor,
                     style = MaterialTheme.typography.titleMedium
                 )
             }
 
-            // 读卡记录显示
+            // 读卡记录显示 - 仅在NFC启用时显示
             AnimatedVisibility(
-                visible = cardIdm != null,
+                visible = nfcState == NfcState.ENABLED && cardIdm != null,
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
@@ -92,14 +114,14 @@ fun NfcStatusComponent(isNfcEnabled: Boolean, cardIdm: String?) {
                     Text(
                         text = "卡号: ${cardIdm ?: ""}",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = if (isNfcEnabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
 
-            // NFC 已禁用时显示 “去启用 NFC” 按钮
+            // NFC 已禁用时显示 "去启用 NFC" 按钮
             AnimatedVisibility(
-                visible = !isNfcEnabled,
+                visible = nfcState == NfcState.DISABLED,
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
@@ -126,6 +148,22 @@ fun NfcStatusComponent(isNfcEnabled: Boolean, cardIdm: String?) {
                     }
                 }
             }
+
+            // 设备不支持NFC时的提示信息
+            AnimatedVisibility(
+                visible = nfcState == NfcState.UNSUPPORTED,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "无法使用读卡功能",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 }
@@ -134,7 +172,7 @@ fun NfcStatusComponent(isNfcEnabled: Boolean, cardIdm: String?) {
 @Composable
 fun NfcStatusEnabledPreview() {
     NfcStatusComponent(
-        isNfcEnabled = true,
+        nfcState = NfcState.ENABLED,
         cardIdm = "0123456789ABCDEF"
     )
 }
@@ -143,7 +181,16 @@ fun NfcStatusEnabledPreview() {
 @Composable
 fun NfcStatusDisabledPreview() {
     NfcStatusComponent(
-        isNfcEnabled = false,
+        nfcState = NfcState.DISABLED,
+        cardIdm = null
+    )
+}
+
+@Preview
+@Composable
+fun NfcStatusUnsupportedPreview() {
+    NfcStatusComponent(
+        nfcState = NfcState.UNSUPPORTED,
         cardIdm = null
     )
 }

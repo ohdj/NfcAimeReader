@@ -16,6 +16,7 @@ import org.ohdj.nfcaimereader.data.datastore.UserPreferenceViewModel
 import org.ohdj.nfcaimereader.ui.navigation.Navigation
 import org.ohdj.nfcaimereader.ui.theme.NfcAimeReaderTheme
 import org.ohdj.nfcaimereader.utils.NfcManager
+import org.ohdj.nfcaimereader.utils.NfcState
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -61,11 +62,19 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        nfcManager.enableNfcReaderMode()
+        // 刷新NFC状态
+        nfcManager.refreshNfcState()
+
+        // 只有在NFC可用且已启用的情况下才启用读取模式
+        val nfcState = nfcManager.nfcState.value
+        if (nfcState == NfcState.ENABLED) {
+            nfcManager.enableNfcReaderMode()
+        }
     }
 
     override fun onPause() {
         super.onPause()
+        // 总是禁用NFC读取模式，无论设备是否支持
         nfcManager.disableNfcReaderMode()
     }
 }
