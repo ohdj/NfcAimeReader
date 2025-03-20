@@ -21,7 +21,7 @@ class NfcManager(private val activity: Activity) : NfcAdapter.ReaderCallback {
 
     override fun onTagDiscovered(tag: Tag?) {
         val idm = tag?.id?.joinToString("") { String.format("%02X", it) }
-        _cardIdm.value = idm ?: "No IDm found"
+        _cardIdm.value = idm
     }
 
     fun isNfcSupported(): Boolean = nfcAdapter != null
