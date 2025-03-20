@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.ohdj.nfcaimereader.model.ConnectionState
 import org.ohdj.nfcaimereader.model.WebSocketServerInfo
+import org.ohdj.nfcaimereader.ui.theme.extendedColorScheme
 
 @Composable
 fun WebSocketStatusComponent(
@@ -35,7 +36,7 @@ fun WebSocketStatusComponent(
     onClick: () -> Unit,
 ) {
     val backgroundColor by animateColorAsState(
-        if (connectionState.isConnected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
+        if (connectionState.isConnected) MaterialTheme.extendedColorScheme.successContainer else MaterialTheme.colorScheme.errorContainer
     )
 
     Card(
@@ -49,7 +50,7 @@ fun WebSocketStatusComponent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // 状态指示
@@ -58,7 +59,7 @@ fun WebSocketStatusComponent(
             Icon(
                 imageVector = icon,
                 contentDescription = "Websocket Status Icon",
-                tint = if (connectionState.isConnected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
+                tint = if (connectionState.isConnected) MaterialTheme.extendedColorScheme.onSuccessContainer else MaterialTheme.colorScheme.onErrorContainer,
                 modifier = Modifier.size(24.dp)
             )
 
@@ -69,7 +70,8 @@ fun WebSocketStatusComponent(
             ) {
                 Text(
                     text = if (connectionState.isConnected) "已连接" else "未连接",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (connectionState.isConnected) MaterialTheme.extendedColorScheme.onSuccessContainer else MaterialTheme.colorScheme.onErrorContainer
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -87,6 +89,7 @@ fun WebSocketStatusComponent(
 
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                tint = if (connectionState.isConnected) MaterialTheme.extendedColorScheme.onSuccessContainer else MaterialTheme.colorScheme.onErrorContainer,
                 contentDescription = "详情"
             )
         }

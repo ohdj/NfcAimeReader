@@ -46,13 +46,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import org.ohdj.nfcaimereader.model.WebSocketServerInfo
+import org.ohdj.nfcaimereader.ui.theme.extendedColorScheme
 import org.ohdj.nfcaimereader.ui.viewmodel.WebSocketViewModel
 
 @Composable
@@ -92,11 +92,7 @@ fun WebSocketDetailScreen(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (connectionState.isConnected) {
-                        Color(0xFFE8F5E9)
-                    } else {
-                        Color(0xFFFBE9E7)
-                    }
+                    containerColor = if (connectionState.isConnected) MaterialTheme.extendedColorScheme.successContainer else MaterialTheme.colorScheme.errorContainer
                 )
             ) {
                 Column(
@@ -105,7 +101,8 @@ fun WebSocketDetailScreen(
                     Text(
                         text = if (connectionState.isConnected) "已连接" else "未连接",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = if (connectionState.isConnected) MaterialTheme.extendedColorScheme.onSuccessContainer else MaterialTheme.colorScheme.onErrorContainer
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -116,7 +113,8 @@ fun WebSocketDetailScreen(
                                 "${it.ip}:${it.port}"
                             } ?: "未配置服务器"
                         },
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
