@@ -15,8 +15,6 @@ public static class DllMain
     static DllMain()
     {
         PInvoke.AllocConsole();
-        card = new Card("") ;
-        Server = WebSocketServers.GetWebSocketServer();
     }
 
     //返回API版本
@@ -26,56 +24,9 @@ public static class DllMain
     [UnmanagedCallersOnly(EntryPoint = "aime_io_init")]
     public static int Init()
     {
-        Console.WriteLine(card.CardIDm);
-        Server.Start(socket =>
-        {
-            socket.OnOpen = () => Console.WriteLine("Clinet connected! Address:" + socket.ConnectionInfo.ClientIpAddress + ":" + socket.ConnectionInfo.ClientPort);
-            socket.OnClose = () => Console.WriteLine("The connection had been lost!");
-            socket.OnError = e => Console.WriteLine("Error: " + e);
-            socket.OnMessage = async message =>
-            {
-                Console.WriteLine("Received message: " + message);
-                try
-                {
-                    //尝试解析为JSON
-                    JObject jsonObj = JObject.Parse(message);
-                    var Module = jsonObj["module"]?.ToString();
-                    //根据模式处理
-                    if (Module == "card")
-                    {
-                        var jsonParams = jsonObj["params"];
-                        if (jsonParams != null && jsonParams.Count() > 1)
-                        {
-                            string? targetValue = jsonParams[1]?.ToString();
-                            if (targetValue != null)
-                            {
-                                Console.WriteLine("IDm: " + targetValue);
-                                card.SetCardIdm(targetValue);
-                            }
-                        }
-                    }
-                    else if (Module == "access_code")
-                    {
-                        var jsonParams = jsonObj["params"];
-                        if (jsonParams != null && jsonParams.Count() > 1)
-                        {
-                            string? targetValue = jsonParams[1]?.ToString();
-                            if (targetValue.Length == 20)
-                            {
-                                Console.WriteLine("AccessCode: " + targetValue);
-                                card.SetCardAccessCode(targetValue);
-                            }
-                        }
-                    }
-                }
-                catch (JsonReaderException)
-                {
-                    Console.WriteLine("Received message is not in JSON format.");
-                }
-                await Task.CompletedTask; // Ensure the method is awaited
-            };
-        });
-
+        card = new Card("");
+        //启动WebSocket服务器
+        WebSocketServers.RunWebSocketServer(card);
         return 0;
     }
        

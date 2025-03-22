@@ -1,6 +1,7 @@
 namespace NfcAimeReaderDLL;
 
 public class Card {
+    public static Card card;
     public byte[] CardIDm;
     public byte[] CardAccessCode;
     public Boolean IsUsePhysicalCard;
@@ -8,6 +9,7 @@ public class Card {
     public long ExpiredTime;
     public Card(String IDm) {
         CardIDm = IDmHandle(IDm);
+        card = this;
     }
     
     public void SetCardIdm(String IDm) {
