@@ -1,8 +1,6 @@
+using Fleck;
 using System.Runtime.InteropServices;
 using Windows.Win32;
-using Fleck;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace NfcAimeReaderDLL;
 
@@ -15,8 +13,6 @@ public static class DllMain
     static DllMain()
     {
         PInvoke.AllocConsole();
-        card = new Card("") ;
-        Server = WebSocketServers.GetWebSocketServer();
     }
 
     //返回API版本
@@ -26,38 +22,9 @@ public static class DllMain
     [UnmanagedCallersOnly(EntryPoint = "aime_io_init")]
     public static int Init()
     {
-        Console.WriteLine(card.CardIDm);
-        Server.Start(socket =>
-        {
-            socket.OnOpen = () => Console.WriteLine("Clinet connected! Address:" + socket.ConnectionInfo.ClientIpAddress + ":" + socket.ConnectionInfo.ClientPort);
-            socket.OnClose = () => Console.WriteLine("The connection had been lost!");
-            socket.OnError = e => Console.WriteLine("Error: " + e);
-            socket.OnMessage = async message =>
-            {
-                Console.WriteLine("Received message: " + message);
-                try
-                {
-                    //尝试解析为JSON
-                    JObject jsonObj = JObject.Parse(message);
-                    var jsonParams = jsonObj["params"];
-                    if (jsonParams != null && jsonParams.Count() > 1)
-                    {
-                        string? targetValue = jsonParams[1]?.ToString();
-                        if (targetValue != null)
-                        {
-                            Console.WriteLine("IDm: " + targetValue);
-                            card.SetCardIdm(targetValue);
-                        }
-                    }
-                }
-                catch (JsonReaderException)
-                {
-                    Console.WriteLine("Received message is not in JSON format.");
-                }
-                await Task.CompletedTask; // Ensure the method is awaited
-            };
-        });
-
+        card = new Card("");
+        //启动WebSocket服务器
+        WebSocketServers.RunWebSocketServer(card);
         return 0;
     }
 
@@ -66,7 +33,6 @@ public static class DllMain
     public static int NfcPoll(byte unitNo)
     {
         Volatile.Write(ref LastPollTime, Environment.TickCount64);
-        //Console.WriteLine("Polling...");
         // 检查空格键是否按下
         var enterPressed = (PInvoke.GetAsyncKeyState(0x0D) & 0x8000) != 0;
         if (!enterPressed)
@@ -77,22 +43,21 @@ public static class DllMain
         return 0;
     }
 
-    //获取Aime ID
+    //获取Aime ID AcessCode
     [UnmanagedCallersOnly(EntryPoint = "aime_io_nfc_get_aime_id")]
     public static int GetAimeId(byte unitNo, IntPtr luid, nint luidSize)
     {
-        //Console.WriteLine("Getting Aime ID...");
         if (unitNo != 0)
         {
             return 1;
         }
-        if (card?.IsCardExpired() == true || card?.CardIDm == null)
+        if (card == null || card.IsCardExpired() || card.IsUsePhysicalCard == true || card.CardAccessCode == null)
         {
             return 1;
         }
         //将卡号复制到缓存区以传递给游戏
-        Marshal.Copy(card.CardIDm, 0, luid, (int)luidSize);
-        Console.WriteLine("Successfully copied card IDm to buffer.");
+        Marshal.Copy(card.CardAccessCode, 0, luid, (int)luidSize);
+        Console.WriteLine("Successfully copied AccessCode to buffer.");
         return 0;
     }
 
@@ -100,9 +65,7 @@ public static class DllMain
     [UnmanagedCallersOnly(EntryPoint = "aime_io_nfc_get_felica_id")]
     public static unsafe int GetFelicaId(byte unitNo, ulong* idm)
     {
-        //Console.WriteLine("Getting FeliCa ID...");
-        //Console.WriteLine(card.IsCardExpired);
-        if (card == null || card.IsCardExpired())
+        if (card == null || card.IsCardExpired() || card.IsUsePhysicalCard == false || card.CardIDm == null)
         {
             return 1;
         }
@@ -111,7 +74,6 @@ public static class DllMain
         {
             idmValue = (idmValue << 8) | card.CardIDm[i];
         }
-
         *idm = idmValue;
         Console.WriteLine("Successful!");
         return 0;
