@@ -1,6 +1,5 @@
 package org.ohdj.nfcaimereader.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -9,6 +8,8 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
@@ -33,6 +34,9 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+// 创建 CompositionLocal 来传递扩展颜色
+val LocalExtendedColorScheme = staticCompositionLocalOf { ExtendedLightColorScheme }
+
 @Composable
 fun NfcAimeReaderTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -50,9 +54,20 @@ fun NfcAimeReaderTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    // 根据主题选择扩展颜色方案
+    val extendedColors = if (darkTheme) ExtendedDarkColorScheme else ExtendedLightColorScheme
+
+    CompositionLocalProvider(
+        LocalExtendedColorScheme provides extendedColors
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
+
+val MaterialTheme.extendedColorScheme: ExtendedColorScheme
+    @Composable
+    get() = LocalExtendedColorScheme.current
