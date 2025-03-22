@@ -1,8 +1,6 @@
+using Fleck;
 using System.Runtime.InteropServices;
 using Windows.Win32;
-using Fleck;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace NfcAimeReaderDLL;
 
@@ -29,7 +27,7 @@ public static class DllMain
         WebSocketServers.RunWebSocketServer(card);
         return 0;
     }
-       
+
     //卡轮询
     [UnmanagedCallersOnly(EntryPoint = "aime_io_nfc_poll")]
     public static int NfcPoll(byte unitNo)
@@ -76,7 +74,6 @@ public static class DllMain
         {
             idmValue = (idmValue << 8) | card.CardIDm[i];
         }
-
         *idm = idmValue;
         Console.WriteLine("Successful!");
         return 0;

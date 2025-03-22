@@ -7,10 +7,11 @@ using System.Runtime.CompilerServices;
 
 namespace NfcAimeReaderDLL;
 
-public class WebSocketServers 
+public class WebSocketServers
 {
     static Card card;
-    public static void RunWebSocketServer(Card cards) {
+    public static void RunWebSocketServer(Card cards)
+    {
         card = cards;
         var listenerAddress = Config.ServerAddress;
         var port = Config.ServerPort;
@@ -25,7 +26,7 @@ public class WebSocketServers
                 Console.WriteLine("Received message: " + message);
                 try
                 {
-                   WebSocketPacketHandle(message);
+                    WebSocketPacketHandle(message);
                 }
                 catch (JsonReaderException)
                 {
@@ -36,7 +37,8 @@ public class WebSocketServers
         });
     }
 
-    public static void WebSocketPacketHandle(string message) {
+    public static void WebSocketPacketHandle(string message)
+    {
         //var card = Card.card;
 
         //³¢ÊÔ½âÎöÎªJSON

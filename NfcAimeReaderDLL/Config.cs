@@ -14,11 +14,11 @@ internal static class Config
         ServerPort = ReadKey(IOSection, "serverPort", 1024, "6071");
     }
 
-    
+
     public static string ServerPort { get; }
-    
+
     public static string ServerAddress { get; }
-    
+
 
     //读取键值 From segatools.ini
     internal static unsafe string ReadKey(string section, string key, uint maxLength, string @default = null)
