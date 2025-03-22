@@ -1,8 +1,6 @@
 using Fleck;
-using Microsoft.AspNetCore.Hosting.Server;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Runtime.CompilerServices;
 
 
 namespace NfcAimeReaderDLL;
