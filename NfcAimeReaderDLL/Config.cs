@@ -12,12 +12,15 @@ internal static class Config
     {
         ServerAddress = ReadKey(IOSection, "serverAddress", 1024, "0.0.0.0");
         ServerPort = ReadKey(IOSection, "serverPort", 1024, "6071");
+        Password = ReadKey(IOSection, "password", 1024, "");
     }
 
 
     public static string ServerPort { get; }
 
     public static string ServerAddress { get; }
+
+    public static string Password { get; }
 
 
     //读取键值 From segatools.ini

@@ -1,6 +1,7 @@
 using Fleck;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Text;
 
 
 namespace NfcAimeReaderDLL;
@@ -13,14 +14,50 @@ public class WebSocketServers
         card = cards;
         var listenerAddress = Config.ServerAddress;
         var port = Config.ServerPort;
+        var password = Config.Password;
         var server = new WebSocketServer("ws://" + listenerAddress + ":" + port);
+        server.RestartAfterListenError = true;
         server.Start(socket =>
         {
             socket.OnOpen = () => Console.WriteLine("Clinet connected! Address:" + socket.ConnectionInfo.ClientIpAddress + ":" + socket.ConnectionInfo.ClientPort);
             socket.OnClose = () => Console.WriteLine("The connection had been lost!");
             socket.OnError = e => Console.WriteLine("Error: " + e);
-            socket.OnMessage = async message =>
+            socket.OnBinary = data =>
             {
+                //处理非明文数据
+                byte[] message;
+                if (password == "")
+                {
+                    message = data.ToArray();
+                }else 
+                {
+                    //解密数据
+                    try
+                    {
+                        message = RC4Decryption.DecryptRC4(data.ToArray(), Encoding.UTF8.GetBytes(password));
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Packet decryption error: " + ex);
+                        message = [0x00];
+                    }
+                    
+                };
+                string json = Encoding.UTF8.GetString(message);
+                Console.WriteLine("Received Binary message: " + json);
+                try
+                {
+                    WebSocketPacketHandle(json);
+                }
+                catch (JsonReaderException)
+                {
+                    Console.WriteLine("Received message is not in JSON format.");
+                }
+               
+            };
+            socket.OnMessage = message =>
+            {
+                //处理明文数据
                 Console.WriteLine("Received message: " + message);
                 try
                 {
@@ -30,15 +67,12 @@ public class WebSocketServers
                 {
                     Console.WriteLine("Received message is not in JSON format.");
                 }
-                await Task.CompletedTask; // Ensure the method is awaited
             };
         });
     }
 
     public static void WebSocketPacketHandle(string message)
     {
-        //var card = Card.card;
-
         //尝试解析为JSON
         JObject jsonObj = JObject.Parse(message);
         var Module = jsonObj["module"]?.ToString();
