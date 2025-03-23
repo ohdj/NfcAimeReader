@@ -25,14 +25,8 @@ data class SettingsUiState(
 
 @Composable
 fun SettingScreen(viewModel: UserPreferenceViewModel) {
-    val themeMode by viewModel.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
-    val dynamicColorEnabled by viewModel.dynamicColorEnabled.collectAsState(initial = false)
-    val supportsDynamicTheming = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-
-    val uiState = SettingsUiState(
-        themeMode = themeMode,
-        dynamicColorEnabled = dynamicColorEnabled,
-        supportsDynamicTheming = supportsDynamicTheming
+    val uiState by viewModel.settingsUiState.collectAsState(
+        initial = SettingsUiState()
     )
 
     SettingScreenContent(
