@@ -17,16 +17,20 @@ import org.ohdj.nfcaimereader.data.datastore.UserPreferenceViewModel
 import org.ohdj.nfcaimereader.ui.screen.setting.component.SettingSwitchItem
 import org.ohdj.nfcaimereader.ui.screen.setting.component.SettingThemeItem
 
+data class SettingsUiState(
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val dynamicColorEnabled: Boolean = false,
+    val supportsDynamicTheming: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+)
+
 @Composable
 fun SettingScreen(viewModel: UserPreferenceViewModel) {
-    val themeMode by viewModel.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
-    val dynamicColorEnabled by viewModel.dynamicColorEnabled.collectAsState(initial = false)
-    val supportsDynamicTheming = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val uiState by viewModel.settingsUiState.collectAsState(
+        initial = SettingsUiState()
+    )
 
     SettingScreenContent(
-        themeMode = themeMode,
-        dynamicColorEnabled = dynamicColorEnabled,
-        supportsDynamicTheming = supportsDynamicTheming,
+        uiState = uiState,
         onThemeSelected = { viewModel.updateThemeMode(it) },
         onDynamicColorChanged = { viewModel.updateDynamicColorEnabled(it) }
     )
@@ -34,9 +38,7 @@ fun SettingScreen(viewModel: UserPreferenceViewModel) {
 
 @Composable
 fun SettingScreenContent(
-    themeMode: ThemeMode,
-    dynamicColorEnabled: Boolean,
-    supportsDynamicTheming: Boolean,
+    uiState: SettingsUiState,
     onThemeSelected: (ThemeMode) -> Unit,
     onDynamicColorChanged: (Boolean) -> Unit
 ) {
@@ -50,13 +52,13 @@ fun SettingScreenContent(
         SettingSwitchItem(
             title = "动态取色",
             description = "使用系统提供的配色方案",
-            checked = dynamicColorEnabled,
-            enabled = supportsDynamicTheming,
-            errorMessage = if (!supportsDynamicTheming) "此功能需要 Android 12+" else null,
+            checked = uiState.dynamicColorEnabled,
+            enabled = uiState.supportsDynamicTheming,
+            errorMessage = if (!uiState.supportsDynamicTheming) "此功能需要 Android 12+" else null,
             onCheckedChange = onDynamicColorChanged
         )
         SettingThemeItem(
-            currentTheme = themeMode,
+            currentTheme = uiState.themeMode,
             onThemeSelected = onThemeSelected
         )
     }
@@ -67,9 +69,11 @@ fun SettingScreenContent(
 @Composable
 fun SettingScreenPreviewAboveAndroid12() {
     SettingScreenContent(
-        themeMode = ThemeMode.SYSTEM,
-        dynamicColorEnabled = true,
-        supportsDynamicTheming = true,
+        uiState = SettingsUiState(
+            themeMode = ThemeMode.SYSTEM,
+            dynamicColorEnabled = false,
+            supportsDynamicTheming = true
+        ),
         onThemeSelected = {},
         onDynamicColorChanged = {}
     )
@@ -80,9 +84,11 @@ fun SettingScreenPreviewAboveAndroid12() {
 @Composable
 fun SettingScreenPreviewBelowAndroid12() {
     SettingScreenContent(
-        themeMode = ThemeMode.SYSTEM,
-        dynamicColorEnabled = false,
-        supportsDynamicTheming = false,
+        uiState = SettingsUiState(
+            themeMode = ThemeMode.SYSTEM,
+            dynamicColorEnabled = false,
+            supportsDynamicTheming = false
+        ),
         onThemeSelected = {},
         onDynamicColorChanged = {}
     )
