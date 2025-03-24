@@ -16,6 +16,10 @@ class WebSocketRepository @Inject constructor(
 ) {
     val connectionState = webSocketClient.connectionState
 
+    fun sendMessage(message: String): Boolean {
+        return webSocketClient.sendMessage(message)
+    }
+
     suspend fun connectToServer(serverInfo: WebSocketServerInfo) {
         webSocketClient.connect(serverInfo)
         preferences.saveServerInfo(serverInfo)

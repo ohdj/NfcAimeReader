@@ -8,6 +8,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import org.json.JSONObject
 import org.ohdj.nfcaimereader.model.ConnectionState
 import org.ohdj.nfcaimereader.model.WebSocketServerInfo
 import java.util.concurrent.TimeUnit
@@ -75,7 +76,24 @@ class WebSocketClient @Inject constructor() {
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-                // 处理接收到的消息
+                try {
+                    val jsonObject = JSONObject(text)
+                    // 根据通讯协议，若 status 为 true，则表示刷卡成功
+                    val status = jsonObject.optBoolean("status", false)
+                    if (status) {
+                        _connectionState.value = _connectionState.value.copy(
+                            message = "刷卡成功",
+                        )
+                    } else {
+                        _connectionState.value = _connectionState.value.copy(
+                            message = "刷卡失败"
+                        )
+                    }
+                } catch (e: Exception) {
+                    _connectionState.value = _connectionState.value.copy(
+                        message = "响应解析错误: ${e.message}"
+                    )
+                }
             }
         })
     }

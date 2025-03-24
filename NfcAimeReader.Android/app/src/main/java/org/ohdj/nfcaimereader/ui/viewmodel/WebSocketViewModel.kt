@@ -83,4 +83,15 @@ class WebSocketViewModel @Inject constructor(
             _isScanning.value = false
         }
     }
+
+    fun sendCardId(jsonMessage: String) {
+        viewModelScope.launch {
+            val result = repository.sendMessage(jsonMessage)
+            if (result) {
+                // 发送成功处理
+            } else {
+                // 发送失败处理
+            }
+        }
+    }
 }
