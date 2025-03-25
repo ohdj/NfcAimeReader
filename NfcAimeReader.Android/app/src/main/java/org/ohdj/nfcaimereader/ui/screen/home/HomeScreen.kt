@@ -22,7 +22,6 @@ import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
 import org.ohdj.nfcaimereader.utils.collectNfcStateAsState
 import org.ohdj.nfcaimereader.utils.rememberNfcStateManager
-import java.math.BigInteger
 
 @Composable
 fun HomeScreen(
@@ -52,29 +51,18 @@ fun HomeScreen(
         }
     }
 
-    val cardIdm by nfcManager.cardIdm.collectAsState()
-
     // Send card ID when detected
-    LaunchedEffect(cardIdm) {
-        cardIdm?.let {
-            // 将16位16进制卡号转换为20位10进制卡号
-            val decimalCardId = BigInteger(it, 16).toString().padStart(20, '0')
-            // 构造 JSON 请求
-            val jsonMessage = """
-            {
-              "module": "card",
-              "function": "insert",
-              "params": "$decimalCardId"
-            }
-            """.trimIndent()
-            // 通过 WebSocket 发送消息
-            viewModel.sendCardId(jsonMessage)
-        }
-    }
+//    LaunchedEffect(cardIdm) {
+//        cardIdm?.let { hexCardId ->
+//            val decimalCardId = webSocketManager.convertCardId(hexCardId)
+//            webSocketManager.sendCardId(decimalCardId)
+//        }
+//    }
 
     Column {
         // 获取NFC状态和卡片ID
         val nfcState = nfcStateManager.collectNfcStateAsState(context)
+        val cardIdm by nfcManager.cardIdm.collectAsState()
 
         // NFC状态组件
         NfcStatusComponent(
