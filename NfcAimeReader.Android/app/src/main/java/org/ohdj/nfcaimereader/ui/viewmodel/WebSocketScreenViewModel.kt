@@ -15,7 +15,7 @@ import org.ohdj.nfcaimereader.model.WebSocketServerInfo
 import javax.inject.Inject
 
 @HiltViewModel
-class WebSocketViewModel @Inject constructor(
+class WebSocketScreenViewModel @Inject constructor(
     private val repository: WebSocketRepository
 ) : ViewModel() {
 

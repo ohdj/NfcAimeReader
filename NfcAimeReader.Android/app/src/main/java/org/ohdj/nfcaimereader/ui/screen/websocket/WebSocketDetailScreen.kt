@@ -53,11 +53,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import org.ohdj.nfcaimereader.model.WebSocketServerInfo
 import org.ohdj.nfcaimereader.ui.theme.extendedColorScheme
-import org.ohdj.nfcaimereader.ui.viewmodel.WebSocketViewModel
+import org.ohdj.nfcaimereader.ui.viewmodel.WebSocketScreenViewModel
 
 @Composable
 fun WebSocketDetailScreen(
-    viewModel: WebSocketViewModel = hiltViewModel()
+    viewModel: WebSocketScreenViewModel = hiltViewModel()
 ) {
     val connectionState by viewModel.connectionState.collectAsState()
     val savedServers by viewModel.savedServers.collectAsState()

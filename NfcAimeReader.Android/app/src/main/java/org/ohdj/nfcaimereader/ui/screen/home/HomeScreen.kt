@@ -17,7 +17,7 @@ import androidx.navigation.NavController
 import org.ohdj.nfcaimereader.ui.navigation.Screen
 import org.ohdj.nfcaimereader.ui.screen.home.component.NfcStatusComponent
 import org.ohdj.nfcaimereader.ui.screen.home.component.WebSocketStatusComponent
-import org.ohdj.nfcaimereader.ui.viewmodel.WebSocketViewModel
+import org.ohdj.nfcaimereader.ui.viewmodel.WebSocketScreenViewModel
 import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
 import org.ohdj.nfcaimereader.utils.collectNfcStateAsState
@@ -27,7 +27,7 @@ import org.ohdj.nfcaimereader.utils.rememberNfcStateManager
 fun HomeScreen(
     nfcManager: NfcManager,
     navController: NavController,
-    viewModel: WebSocketViewModel = hiltViewModel()
+    viewModel: WebSocketScreenViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val nfcStateReceiver = remember { NfcStateBroadcastReceiver() }
