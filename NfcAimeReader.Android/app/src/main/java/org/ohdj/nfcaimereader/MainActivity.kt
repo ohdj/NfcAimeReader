@@ -16,15 +16,15 @@ import org.ohdj.nfcaimereader.data.datastore.UserPreferenceViewModel
 import org.ohdj.nfcaimereader.ui.navigation.Navigation
 import org.ohdj.nfcaimereader.ui.theme.NfcAimeReaderTheme
 import org.ohdj.nfcaimereader.utils.NfcManager
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private lateinit var nfcManager: NfcManager
+    @Inject
+    lateinit var nfcManager: NfcManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        nfcManager = NfcManager(this)
-
         setContent {
             val viewModel: UserPreferenceViewModel = viewModel()
             val themeMode by viewModel.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
@@ -54,18 +54,18 @@ class MainActivity : ComponentActivity() {
                 darkTheme = darkTheme,
                 dynamicColor = supportsDynamicTheming && dynamicColorEnabled
             ) {
-                Navigation(nfcManager, viewModel)
+                Navigation(viewModel)
             }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        nfcManager.enableNfcReaderMode()
+        nfcManager.enableNfcReaderMode(this)
     }
 
     override fun onPause() {
         super.onPause()
-        nfcManager.disableNfcReaderMode()
+        nfcManager.disableNfcReaderMode(this)
     }
 }

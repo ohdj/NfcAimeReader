@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import org.ohdj.nfcaimereader.ui.navigation.Screen
 import org.ohdj.nfcaimereader.ui.screen.home.component.NfcStatusComponent
 import org.ohdj.nfcaimereader.ui.screen.home.component.WebSocketStatusComponent
+import org.ohdj.nfcaimereader.ui.viewmodel.HomeViewModel
 import org.ohdj.nfcaimereader.ui.viewmodel.WebSocketScreenViewModel
 import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
@@ -25,19 +26,19 @@ import org.ohdj.nfcaimereader.utils.rememberNfcStateManager
 
 @Composable
 fun HomeScreen(
-    nfcManager: NfcManager,
     navController: NavController,
-    viewModel: WebSocketScreenViewModel = hiltViewModel()
+    viewModel: WebSocketScreenViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val nfcStateReceiver = remember { NfcStateBroadcastReceiver() }
 
     // 创建NFC状态管理器
-    val nfcStateManager = rememberNfcStateManager(nfcManager, nfcStateReceiver)
+    val nfcStateManager = rememberNfcStateManager(homeViewModel.nfcManager, nfcStateReceiver)
 
     // 只有当设备支持NFC时才注册广播接收器
     LaunchedEffect(Unit) {
-        if (nfcManager.isNfcSupported()) {
+        if (homeViewModel.nfcManager.isNfcSupported()) {
             nfcStateReceiver.register(context)
         }
     }
@@ -45,7 +46,7 @@ fun HomeScreen(
     // 在组件销毁时解注册广播接收器
     DisposableEffect(Unit) {
         onDispose {
-            if (nfcManager.isNfcSupported()) {
+            if (homeViewModel.nfcManager.isNfcSupported()) {
                 nfcStateReceiver.unregister(context)
             }
         }
@@ -62,7 +63,7 @@ fun HomeScreen(
     Column {
         // 获取NFC状态和卡片ID
         val nfcState = nfcStateManager.collectNfcStateAsState(context)
-        val cardIdm by nfcManager.cardIdm.collectAsState()
+        val cardIdm by homeViewModel.nfcManager.cardIdm.collectAsState()
 
         // NFC状态组件
         NfcStatusComponent(

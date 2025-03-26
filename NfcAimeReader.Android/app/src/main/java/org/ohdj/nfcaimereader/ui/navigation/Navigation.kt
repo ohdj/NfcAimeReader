@@ -74,7 +74,7 @@ private val bottomNavItem = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Navigation(nfcManager: NfcManager, viewModel: UserPreferenceViewModel) {
+fun Navigation(viewModel: UserPreferenceViewModel) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -162,7 +162,7 @@ fun Navigation(nfcManager: NfcManager, viewModel: UserPreferenceViewModel) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Home.route) {
-                HomeScreen(nfcManager, navController)
+                HomeScreen(navController)
             }
             composable(Screen.Config.route) {
                 WebSocketDetailScreen()
