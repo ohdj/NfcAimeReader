@@ -57,7 +57,6 @@ import org.ohdj.nfcaimereader.data.datastore.UserPreferenceViewModel
 import org.ohdj.nfcaimereader.ui.screen.home.HomeScreen
 import org.ohdj.nfcaimereader.ui.screen.setting.SettingScreen
 import org.ohdj.nfcaimereader.ui.screen.websocket.WebSocketDetailScreen
-import org.ohdj.nfcaimereader.utils.NfcManager
 
 // 导航路径
 sealed class Screen(val route: String, val title: String) {

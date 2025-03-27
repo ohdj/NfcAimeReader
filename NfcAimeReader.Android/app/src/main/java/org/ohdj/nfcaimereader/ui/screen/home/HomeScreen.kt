@@ -19,7 +19,6 @@ import org.ohdj.nfcaimereader.ui.screen.home.component.NfcStatusComponent
 import org.ohdj.nfcaimereader.ui.screen.home.component.WebSocketStatusComponent
 import org.ohdj.nfcaimereader.ui.viewmodel.HomeViewModel
 import org.ohdj.nfcaimereader.ui.viewmodel.WebSocketScreenViewModel
-import org.ohdj.nfcaimereader.utils.NfcManager
 import org.ohdj.nfcaimereader.utils.NfcStateBroadcastReceiver
 import org.ohdj.nfcaimereader.utils.collectNfcStateAsState
 import org.ohdj.nfcaimereader.utils.rememberNfcStateManager
