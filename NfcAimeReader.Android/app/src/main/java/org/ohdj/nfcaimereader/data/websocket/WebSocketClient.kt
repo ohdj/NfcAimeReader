@@ -93,7 +93,15 @@ class WebSocketClient @Inject constructor() {
         }
     }
 
-    fun sendMessage(message: String): Boolean {
+    fun sendCardId(cardId: String): Boolean {
+        val message = """
+            {
+              "module": "card",
+              "function": "insert",
+              "params": "$cardId"
+            }
+        """.trimIndent()
+
         return webSocket?.send(message) ?: false
     }
 }

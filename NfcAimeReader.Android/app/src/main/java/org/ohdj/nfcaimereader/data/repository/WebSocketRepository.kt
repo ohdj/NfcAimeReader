@@ -5,6 +5,7 @@ import org.ohdj.nfcaimereader.data.datastore.WebSocketPreferences
 import org.ohdj.nfcaimereader.data.websocket.WebSocketClient
 import org.ohdj.nfcaimereader.model.WebSocketServerInfo
 import org.ohdj.nfcaimereader.utils.NetworkScanner
+import java.math.BigInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -47,5 +48,10 @@ class WebSocketRepository @Inject constructor(
 
     suspend fun scanNetwork(port: Int): List<WebSocketServerInfo> {
         return networkScanner.scanForWebSocketServers(port)
+    }
+
+    fun sendCardId(hexCardId: String): Boolean {
+        val decimalCardId = BigInteger(hexCardId, 16).toString().padStart(20, '0')
+        return webSocketClient.sendCardId(decimalCardId)
     }
 }
