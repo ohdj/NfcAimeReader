@@ -14,12 +14,10 @@ class HomeViewModel @Inject constructor(
     private val webSocketRepository: WebSocketRepository
 ) : ViewModel() {
     init {
-        // 监听NFC卡号变化并发送
-        viewModelScope.launch {
-            nfcManager.cardIdm.collect { cardId ->
-                if (!cardId.isNullOrEmpty() && webSocketRepository.connectionState.value.isConnected) {
-                    webSocketRepository.sendCardId(cardId)
-                }
+        // 卡片检测回调
+        nfcManager.setOnCardDetectedListener { cardId ->
+            if (webSocketRepository.connectionState.value.isConnected) {
+                webSocketRepository.sendCardId(cardId)
             }
         }
     }

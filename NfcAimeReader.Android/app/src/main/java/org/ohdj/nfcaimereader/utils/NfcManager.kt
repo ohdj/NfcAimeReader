@@ -26,9 +26,19 @@ class NfcManager @Inject constructor(
         nfcAdapter?.disableReaderMode(activity)
     }
 
+    // 回调
+    private var onCardDetected: ((String) -> Unit)? = null
+    fun setOnCardDetectedListener(listener: (String) -> Unit) {
+        onCardDetected = listener
+    }
+
     override fun onTagDiscovered(tag: Tag?) {
         val idm = tag?.id?.joinToString("") { String.format("%02X", it) }
         _cardIdm.value = idm
+
+        if (idm != null) {
+            onCardDetected?.invoke(idm)
+        }
     }
 
     fun isNfcSupported(): Boolean = nfcAdapter != null
