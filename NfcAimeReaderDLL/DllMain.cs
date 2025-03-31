@@ -37,42 +37,24 @@ public static class DllMain
                 Console.WriteLine("Received message: " + message);
                 try
                 {
-                    // Try to parse as JSON
+                    //尝试解析为JSON
                     JObject jsonObj = JObject.Parse(message);
-                    string? module = jsonObj["module"]?.ToString();
-                    string? function = jsonObj["function"]?.ToString();
-
-                    // Check if this is a card insert message
-                    if (module == "card" && function == "insert")
+                    var jsonParams = jsonObj["params"];
+                    if (jsonParams != null && jsonParams.Count() > 1)
                     {
-                        string? cardNumber = jsonObj["params"]?.ToString();
-                        if (!string.IsNullOrEmpty(cardNumber))
+                        string? targetValue = jsonParams[1]?.ToString();
+                        if (targetValue != null)
                         {
-                            Console.WriteLine("Card Number: " + cardNumber);
-                            card.SetCardNumber(cardNumber);
-
-                            // Send success response
-                            var response = new { status = true };
-                            await socket.Send(JsonConvert.SerializeObject(response));
+                            Console.WriteLine("IDm: " + targetValue);
+                            card.SetCardIdm(targetValue);
                         }
                     }
                 }
                 catch (JsonReaderException)
                 {
                     Console.WriteLine("Received message is not in JSON format.");
-
-                    // Send error response
-                    var errorResponse = new { status = false, error = "Invalid JSON format" };
-                    await socket.Send(JsonConvert.SerializeObject(errorResponse));
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error processing message: {ex.Message}");
-
-                    // Send error response
-                    var errorResponse = new { status = false, error = ex.Message };
-                    await socket.Send(JsonConvert.SerializeObject(errorResponse));
-                }
+                await Task.CompletedTask; // Ensure the method is awaited
             };
         });
 
