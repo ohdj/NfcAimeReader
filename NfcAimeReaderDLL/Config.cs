@@ -12,7 +12,7 @@ internal static class Config
     {
         //GameId = ReadKey(IOSection, "gameId", 4);
         ServerAddress = ReadKey(IOSection, "serverAddress", 1024, "0.0.0.0");
-        ServerPort = ReadKey(IOSection, "serverPort", 1024, "6071");
+        ServerPort = ReadKey(IOSection, "serverPort", 1024, "14514");
     }
 
     //public static string GameId { get; }

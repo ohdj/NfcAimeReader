@@ -51,7 +51,6 @@ class WebSocketRepository @Inject constructor(
     }
 
     fun sendCardId(hexCardId: String): Boolean {
-        val decimalCardId = BigInteger(hexCardId, 16).toString().padStart(20, '0')
-        return webSocketClient.sendCardId(decimalCardId)
+        return webSocketClient.sendCardId(hexCardId)
     }
 }
