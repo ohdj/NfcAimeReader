@@ -1,4 +1,4 @@
-name: Android CI
+name: CI Workflow
 
 on:
   push:
@@ -7,23 +7,24 @@ on:
       - '.github/release.json' # 当release.json变化时触发workflow
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-      - name: set up JDK 17
+
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
 
-      - name: Extract version information
+      - name: Extract version information (Linux)
         id: get_version_info
         run: |
-          echo "CODE=$(cat .github/release.json | jq -r '.code')" >> $GITHUB_ENV
-          echo "VERSION=$(cat .github/release.json | jq -r '.version')" >> $GITHUB_ENV
+          echo "CODE=$(jq -r '.code' < .github/release.json)" >> $GITHUB_ENV
+          echo "VERSION=$(jq -r '.version' < .github/release.json)" >> $GITHUB_ENV
 
       # 获取上一个 tag
       - name: Get previous tag
@@ -42,9 +43,11 @@ jobs:
           cat app/signing.properties
 
       - name: Grant execute permission for gradlew
+        working-directory: NfcAimeReader.Android
         run: chmod +x gradlew
 
       - name: Build with Gradle
+        working-directory: NfcAimeReader.Android
         run: ./gradlew assembleRelease
 
       - name: Create Release Tag
@@ -54,7 +57,7 @@ jobs:
         run: git push origin v${{ env.VERSION }}
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk NfcAimeReader_v${{ env.VERSION }}.apk
+        run: mv NfcAimeReader.Android/app/build/outputs/apk/release/app-release.apk NfcAimeReader_v${{ env.VERSION }}.apk
 
       - name: Calculate APK hash (MD5 and SHA1)
         id: apk_hash
@@ -89,3 +92,25 @@ jobs:
           asset_path: ./NfcAimeReader_v${{ env.VERSION }}.apk
           asset_name: NfcAimeReader_v${{ env.VERSION }}.apk
           asset_content_type: application/vnd.android.package-archive
+
+  windows-build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 使用 PowerShell 读取 release.json 中的版本信息
+      - name: Extract version information (Windows)
+        id: get_version_info
+        shell: pwsh
+        run: |
+          $json = Get-Content .github/release.json | ConvertFrom-Json
+          Write-Output "VERSION=$($json.version)" >> $env:GITHUB_ENV
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build and Publish .NET Project
+        run: dotnet publish -c Release -r win-x64 -p:Version=${{ env.VERSION }} NfcAimeReaderDLL/NfcAimeReaderDLL.csproj
