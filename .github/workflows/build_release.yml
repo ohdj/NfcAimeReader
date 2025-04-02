@@ -34,6 +34,7 @@ jobs:
           fallback: "0.0.1"  # 设置默认的 fallback tag，如果找不到上一个 tag
 
       - name: Generate signing.properties
+        working-directory: NfcAimeReader.Android
         run: |
           ${{ secrets.BASH_DOWNLOAD_JKS }}
           echo "KEYSTORE_FILE = ${{ github.workspace }}/keystore.jks" > app/signing.properties
