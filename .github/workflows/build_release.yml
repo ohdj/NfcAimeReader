@@ -7,7 +7,50 @@ on:
       - '.github/release.json' # 当release.json变化时触发workflow
 
 jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ env.VERSION }}
+      code: ${{ env.CODE }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      previous_tag: ${{ steps.get_previous_tag.outputs.tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version information
+        id: get_version_info
+        run: |
+          echo "CODE=$(jq -r '.code' < .github/release.json)" >> $GITHUB_ENV
+          echo "VERSION=$(jq -r '.version' < .github/release.json)" >> $GITHUB_ENV
+
+      # 获取上一个 tag
+      - name: Get previous tag
+        id: get_previous_tag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        with:
+          fallback: "0.0.1"  # 设置默认的 fallback tag，如果找不到上一个 tag
+
+      - name: Create Release Tag
+        run: git tag v${{ env.VERSION }}
+
+      - name: Push Tag
+        run: git push origin v${{ env.VERSION }}
+
+      - name: Create Release Draft
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.VERSION }}
+          release_name: v${{ env.VERSION }}
+          draft: true
+          body: |
+            [View changes on GitHub](https://github.com/ohdj/NfcAimeReader/compare/v${{ steps.get_previous_tag.outputs.tag }}...v${{ env.VERSION }})
+
   linux-build-android:
+    needs: prepare-release
     runs-on: ubuntu-latest
 
     steps:
@@ -20,18 +63,9 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Extract version information (Linux)
-        id: get_version_info
+      - name: Set version from prepare job
         run: |
-          echo "CODE=$(jq -r '.code' < .github/release.json)" >> $GITHUB_ENV
-          echo "VERSION=$(jq -r '.version' < .github/release.json)" >> $GITHUB_ENV
-
-      # 获取上一个 tag
-      - name: Get previous tag
-        id: get_previous_tag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-        with:
-          fallback: "0.0.1"  # 设置默认的 fallback tag，如果找不到上一个 tag
+          echo "VERSION=${{ needs.prepare-release.outputs.version }}" >> $GITHUB_ENV
 
       - name: Generate signing.properties
         working-directory: NfcAimeReader.Android
@@ -51,15 +85,16 @@ jobs:
         working-directory: NfcAimeReader.Android
         run: ./gradlew assembleRelease
 
-      - name: Create Release Tag
-        run: git tag v${{ env.VERSION }}
-
-      - name: Push Tag
-        run: git push origin v${{ env.VERSION }}
+      - name: Debug - Find APK location
+        working-directory: NfcAimeReader.Android
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Looking for APK files:"
+          find . -name "*.apk" -type f
 
       - name: Rename APK
         working-directory: NfcAimeReader.Android
-        run: mv app/release/app-release.apk NfcAimeReader_v${{ env.VERSION }}.apk
+        run: mv app/release/app-release.apk ${{ github.workspace }}/NfcAimeReader_v${{ env.VERSION }}.apk
 
       - name: Calculate APK hash (MD5 and SHA1)
         id: apk_hash
@@ -67,47 +102,61 @@ jobs:
           echo "MD5=$(md5sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
           echo "SHA1=$(sha1sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
 
-      - name: Create Release Draft
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Update Release Description
+        uses: actions/github-script@v6
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ fromJson(steps.get_release.outputs.result).id }}
         with:
-          tag_name: v${{ env.VERSION }}
-          release_name: v${{ env.VERSION }}
-          draft: true
-          body: |
-            ### Checksum
-            | File | NfcAimeReader_v${{ env.VERSION }}.apk |
-            | ---- | ------------------------------------ |
-            | MD5 | ${{ env.MD5 }} |
-            | SHA1 | ${{ env.SHA1 }} |
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const releaseId = process.env.RELEASE_ID;
+            const version = process.env.VERSION;
+            const md5 = process.env.MD5;
+            const sha1 = process.env.SHA1;
+            const previousTag = '${{ needs.prepare-release.outputs.previous_tag }}';
 
-            [View changes on GitHub](https://github.com/ohdj/NfcAimeReader/compare/v${{ steps.get_previous_tag.outputs.tag }}...v${{ env.VERSION }})
+            const release = await github.rest.repos.getRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: releaseId
+            });
+
+            const newBody = `### Checksum
+            | File | NfcAimeReader_v${version}.apk |
+            | ---- | ------------------------------------ |
+            | MD5 | ${md5} |
+            | SHA1 | ${sha1} |
+
+            [View changes on GitHub](https://github.com/ohdj/NfcAimeReader/compare/v${previousTag}...v${version})`;
+
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: releaseId,
+              body: newBody
+            });
 
       - name: Upload APK
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ needs.prepare-release.outputs.upload_url }}
           asset_path: ./NfcAimeReader_v${{ env.VERSION }}.apk
           asset_name: NfcAimeReader_v${{ env.VERSION }}.apk
           asset_content_type: application/vnd.android.package-archive
 
   windows-build-dll:
+    needs: prepare-release
     runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      # 使用 PowerShell 读取 release.json 中的版本信息
-      - name: Extract version information (Windows)
-        id: get_version_info
+      - name: Set version from prepare job
         shell: pwsh
         run: |
-          $json = Get-Content .github/release.json | ConvertFrom-Json
-          Write-Output "VERSION=$($json.version)" >> $env:GITHUB_ENV
+          echo "VERSION=${{ needs.prepare-release.outputs.version }}" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
@@ -122,7 +171,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.build-linux.outputs.upload_url }}
+          upload_url: ${{ needs.prepare-release.outputs.upload_url }}
           asset_path: NfcAimeReaderDLL/bin/Release/net9.0/win-x64/publish/NfcAimeReaderDLL.dll
           asset_name: aimeio_nfcreader_v${{ env.VERSION }}.dll
           asset_content_type: application/octet-stream
