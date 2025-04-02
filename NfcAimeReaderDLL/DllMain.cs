@@ -26,11 +26,19 @@ public static class DllMain
     [UnmanagedCallersOnly(EntryPoint = "aime_io_init")]
     public static int Init()
     {
-        Console.WriteLine(card.CardIDm);
+        Console.WriteLine("Initializing WebSocket server...");
         Server.Start(socket =>
         {
-            socket.OnOpen = () => Console.WriteLine("Clinet connected! Address:" + socket.ConnectionInfo.ClientIpAddress + ":" + socket.ConnectionInfo.ClientPort);
-            socket.OnClose = () => Console.WriteLine("The connection had been lost!");
+            socket.OnOpen = () =>
+            {
+                Console.WriteLine("Client connected! Address:" + socket.ConnectionInfo.ClientIpAddress + ":" + socket.ConnectionInfo.ClientPort);
+                WebSocketServers.ActiveConnections.Add(socket);
+            };
+            socket.OnClose = () =>
+            {
+                Console.WriteLine("Client disconnected: " + socket.ConnectionInfo.ClientIpAddress + ":" + socket.ConnectionInfo.ClientPort);
+                WebSocketServers.ActiveConnections.Remove(socket);
+            };
             socket.OnError = e => Console.WriteLine("Error: " + e);
             socket.OnMessage = async message =>
             {
@@ -39,22 +47,43 @@ public static class DllMain
                 {
                     //尝试解析为JSON
                     JObject jsonObj = JObject.Parse(message);
-                    var jsonParams = jsonObj["params"];
-                    if (jsonParams != null && jsonParams.Count() > 1)
+                    string? module = jsonObj["module"]?.ToString();
+                    string? function = jsonObj["function"]?.ToString();
+
+                    // Check if this is a card insert request
+                    if (module == "card" && function == "insert")
                     {
-                        string? targetValue = jsonParams[1]?.ToString();
-                        if (targetValue != null)
+                        var jsonParams = jsonObj["params"]?.ToString();
+                        if (!string.IsNullOrEmpty(jsonParams))
                         {
-                            Console.WriteLine("IDm: " + targetValue);
-                            card.SetCardIdm(targetValue);
+                            Console.WriteLine("IDm: " + jsonParams);
+                            card.SetCardIdm(jsonParams);
+
+                            // Send success response
+                            await socket.Send(JsonConvert.SerializeObject(new { status = true }));
                         }
+                        else
+                        {
+                            // Send error response if params is missing
+                            await socket.Send(JsonConvert.SerializeObject(new { status = false, error = "Missing card ID" }));
+                        }
+                    }
+                    else
+                    {
+                        // Send error response for unknown command
+                        await socket.Send(JsonConvert.SerializeObject(new { status = false, error = "Unknown command" }));
                     }
                 }
                 catch (JsonReaderException)
                 {
                     Console.WriteLine("Received message is not in JSON format.");
+                    await socket.Send(JsonConvert.SerializeObject(new { status = false, error = "Invalid JSON format" }));
                 }
-                await Task.CompletedTask; // Ensure the method is awaited
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing message: {ex.Message}");
+                    await socket.Send(JsonConvert.SerializeObject(new { status = false, error = "Internal error" }));
+                }
             };
         });
 
@@ -100,12 +129,11 @@ public static class DllMain
     [UnmanagedCallersOnly(EntryPoint = "aime_io_nfc_get_felica_id")]
     public static unsafe int GetFelicaId(byte unitNo, ulong* idm)
     {
-        //Console.WriteLine("Getting FeliCa ID...");
-        //Console.WriteLine(card.IsCardExpired);
         if (card == null || card.IsCardExpired())
         {
             return 1;
         }
+
         ulong idmValue = 0;
         for (var i = 0; i < 8; i++)
         {
@@ -113,7 +141,18 @@ public static class DllMain
         }
 
         *idm = idmValue;
-        Console.WriteLine("Successful!");
+        Console.WriteLine("Card read successful!");
+
+        // Convert the byte array to hex string for notification
+        string hexString = BitConverter.ToString(card.CardIDm).Replace("-", "");
+
+        // Notify connected clients that the card was read
+        WebSocketServers.BroadcastMessage(new
+        {
+            event_type = "card_read",
+            card_id = hexString
+        });
+
         return 0;
     }
 
