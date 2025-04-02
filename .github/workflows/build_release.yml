@@ -7,7 +7,7 @@ on:
       - '.github/release.json' # 当release.json变化时触发workflow
 
 jobs:
-  build-linux:
+  linux-build-android:
     runs-on: ubuntu-latest
 
     steps:
@@ -95,7 +95,7 @@ jobs:
           asset_name: NfcAimeReader_v${{ env.VERSION }}.apk
           asset_content_type: application/vnd.android.package-archive
 
-  windows-build:
+  windows-build-dll:
     runs-on: windows-latest
 
     steps:
@@ -116,3 +116,13 @@ jobs:
 
       - name: Build and Publish .NET Project
         run: dotnet publish -c Release -r win-x64 -p:Version=${{ env.VERSION }} NfcAimeReaderDLL/NfcAimeReaderDLL.csproj
+
+      - name: Upload DLL to Release Draft
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.build-linux.outputs.upload_url }}
+          asset_path: NfcAimeReaderDLL/bin/Release/net9.0/win-x64/publish/NfcAimeReaderDLL.dll
+          asset_name: aimeio_nfcreader_v${{ env.VERSION }}.dll
+          asset_content_type: application/octet-stream
