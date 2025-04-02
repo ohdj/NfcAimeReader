@@ -58,7 +58,8 @@ jobs:
         run: git push origin v${{ env.VERSION }}
 
       - name: Rename APK
-        run: mv NfcAimeReader.Android/app/build/outputs/apk/release/app-release.apk NfcAimeReader_v${{ env.VERSION }}.apk
+        working-directory: NfcAimeReader.Android
+        run: mv app/release/app-release.apk NfcAimeReader_v${{ env.VERSION }}.apk
 
       - name: Calculate APK hash (MD5 and SHA1)
         id: apk_hash
