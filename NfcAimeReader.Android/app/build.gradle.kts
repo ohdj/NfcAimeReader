@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -21,6 +23,22 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
+        }
+    }
+
+    signingConfigs {
+        create("release") {
+            // Load signing.properties if it exists
+            val signingPropertiesFile = file("signing.properties")
+            if (signingPropertiesFile.exists()) {
+                val properties = Properties()
+                properties.load(signingPropertiesFile.inputStream())
+
+                storeFile = file(properties.getProperty("KEYSTORE_FILE", ""))
+                storePassword = properties.getProperty("KEYSTORE_PASSWORD", "")
+                keyAlias = properties.getProperty("KEY_ALIAS", "")
+                keyPassword = properties.getProperty("KEY_PASSWORD", "")
+            }
         }
     }
 
