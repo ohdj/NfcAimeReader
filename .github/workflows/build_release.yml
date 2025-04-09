@@ -13,10 +13,13 @@ jobs:
       version: ${{ env.VERSION }}
       code: ${{ env.CODE }}
       upload_url: ${{ steps.create_release.outputs.upload_url }}
-      previous_tag: ${{ steps.get_previous_tag.outputs.tag }}
+      release_id: ${{ steps.create_release.outputs.id }}
+      previous_tag: ${{ steps.get_previous_tag.outputs.previous_tag }}
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for tags
 
       - name: Extract version information
         id: get_version_info
@@ -27,9 +30,10 @@ jobs:
       # 获取上一个 tag
       - name: Get previous tag
         id: get_previous_tag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-        with:
-          fallback: "0.0.1"  # 设置默认的 fallback tag，如果找不到上一个 tag
+        run: |
+          PREV_TAG=$(git tag --sort=-v:refname | grep -v "v${{ env.VERSION }}" | head -n 1 | sed 's/^v//' || echo "0.0.1")
+          echo "previous_tag=${PREV_TAG}" >> $GITHUB_OUTPUT
+          echo "Found previous tag (without v): ${PREV_TAG}"
 
       - name: Create Release Tag
         run: git tag v${{ env.VERSION }}
@@ -47,7 +51,7 @@ jobs:
           release_name: v${{ env.VERSION }}
           draft: true
           body: |
-            [View changes on GitHub](https://github.com/ohdj/NfcAimeReader/compare/v${{ steps.get_previous_tag.outputs.tag }}...v${{ env.VERSION }})
+            [View changes on GitHub](https://github.com/ohdj/NfcAimeReader/compare/v${{ steps.get_previous_tag.outputs.previous_tag }}...v${{ env.VERSION }})
 
   linux-build-android:
     needs: prepare-release
@@ -66,6 +70,7 @@ jobs:
       - name: Set version from prepare job
         run: |
           echo "VERSION=${{ needs.prepare-release.outputs.version }}" >> $GITHUB_ENV
+          echo "PREVIOUS_TAG=${{ needs.prepare-release.outputs.previous_tag }}" >> $GITHUB_ENV
 
       - name: Generate signing.properties
         working-directory: NfcAimeReader.Android
@@ -95,26 +100,45 @@ jobs:
           echo "MD5=$(md5sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
           echo "SHA1=$(sha1sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
 
-      - name: Update Release Description
+      # First get the release by tag name
+      - name: Get Release Info
+        id: get_release
         uses: actions/github-script@v6
-        env:
-          RELEASE_ID: ${{ fromJson(steps.get_release.outputs.result).id }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const releaseId = process.env.RELEASE_ID;
+            const tagName = 'v${{ env.VERSION }}';
+            const releases = await github.rest.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            
+            const release = releases.data.find(r => r.tag_name === tagName);
+            if (!release) {
+              throw new Error(`Release with tag ${tagName} not found`);
+            }
+            
+            return release.id;
+          result-encoding: string
+
+      - name: Update Release Description
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const releaseId = ${{ steps.get_release.outputs.result }};
             const version = process.env.VERSION;
             const md5 = process.env.MD5;
             const sha1 = process.env.SHA1;
-            const previousTag = '${{ needs.prepare-release.outputs.previous_tag }}';
+            const previousTag = process.env.PREVIOUS_TAG;
 
-            const release = await github.rest.repos.getRelease({
+            const currentRelease = await github.rest.repos.getRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: releaseId
             });
 
-            const newBody = `### Checksum
+            const checksumInfo = `### Checksum
             | File | NfcAimeReader_v${version}.apk |
             | ---- | ------------------------------------ |
             | MD5 | ${md5} |
@@ -126,7 +150,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: releaseId,
-              body: newBody
+              body: checksumInfo
             });
 
       - name: Upload APK
