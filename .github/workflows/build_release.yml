@@ -173,6 +173,19 @@ jobs:
       - name: Prepare Release Notes
         run: |
           cat > release_notes.md << EOL
+          
+          ### segatools.ini 配置
+          
+          ```ini
+          [aime]
+          ; 启用 Segatools 的读卡器 hook，没有此项也不影响，但是不能设置为0
+          enable=1
+
+          [aimeio]
+          ; 指定 dll 路径，需要把 dll 复制到游戏bin路径下
+          path=aimeio_nfcreader_v${{ env.VERSION }}.dll
+          ```
+
           ### Checksum
           
           | File | aimeio_nfcreader_v${{ env.VERSION }}.dll | NfcAimeReader_v${{ env.VERSION }}.apk |
