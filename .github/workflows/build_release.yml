@@ -12,66 +12,59 @@ jobs:
     outputs:
       version: ${{ env.VERSION }}
       code: ${{ env.CODE }}
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      release_id: ${{ steps.create_release.outputs.id }}
-      previous_tag: ${{ steps.get_previous_tag.outputs.previous_tag }}
-
+      previous_tag: ${{ env.PREVIOUS_TAG }}
+      
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for tags
-
+          fetch-depth: 0  # 获取完整历史以获取标签
+          
       - name: Extract version information
-        id: get_version_info
+        id: version
         run: |
           echo "CODE=$(jq -r '.code' < .github/release.json)" >> $GITHUB_ENV
           echo "VERSION=$(jq -r '.version' < .github/release.json)" >> $GITHUB_ENV
-
+          
       # 获取上一个 tag
       - name: Get previous tag
-        id: get_previous_tag
+        id: previous_tag
         run: |
           PREV_TAG=$(git tag --sort=-v:refname | grep -v "v${{ env.VERSION }}" | head -n 1 | sed 's/^v//' || echo "0.0.1")
-          echo "previous_tag=${PREV_TAG}" >> $GITHUB_OUTPUT
+          echo "PREVIOUS_TAG=${PREV_TAG}" >> $GITHUB_ENV
           echo "Found previous tag (without v): ${PREV_TAG}"
-
-      - name: Create Release Tag
-        run: git tag v${{ env.VERSION }}
-
-      - name: Push Tag
-        run: git push origin v${{ env.VERSION }}
-
-      - name: Create Release Draft
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ env.VERSION }}
-          release_name: v${{ env.VERSION }}
-          draft: true
-          body: |
-            [View changes on GitHub](https://github.com/ohdj/NfcAimeReader/compare/v${{ steps.get_previous_tag.outputs.previous_tag }}...v${{ env.VERSION }})
-
-  linux-build-android:
+      
+      # 创建标签
+      - name: Create Git Tag
+        run: |
+          if ! git rev-parse v${{ env.VERSION }} >/dev/null 2>&1; then
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git tag v${{ env.VERSION }}
+            git push origin v${{ env.VERSION }}
+          fi
+  
+  build-android:
     needs: prepare-release
     runs-on: ubuntu-latest
-
+    outputs:
+      apk_md5: ${{ env.APK_MD5 }}
+      apk_sha1: ${{ env.APK_SHA1 }}
+      
     steps:
       - uses: actions/checkout@v4
-
+      
+      - name: Set version from prepare job
+        run: echo "VERSION=${{ needs.prepare-release.outputs.version }}" >> $GITHUB_ENV
+      
+      # 设置 JDK 17 (用于 Android 构建)
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
-
-      - name: Set version from prepare job
-        run: |
-          echo "VERSION=${{ needs.prepare-release.outputs.version }}" >> $GITHUB_ENV
-          echo "PREVIOUS_TAG=${{ needs.prepare-release.outputs.previous_tag }}" >> $GITHUB_ENV
-
+          
+      # 创建 Android 签名文件
       - name: Generate signing.properties
         working-directory: NfcAimeReader.Android
         run: |
@@ -80,115 +73,125 @@ jobs:
           echo "KEYSTORE_PASSWORD = ${{ secrets.KEYSTORE_PASSWORD }}" >> app/signing.properties
           echo "KEY_ALIAS = ${{ secrets.KEY_ALIAS }}" >> app/signing.properties
           echo "KEY_PASSWORD = ${{ secrets.KEY_PASSWORD }}" >> app/signing.properties
-          cat app/signing.properties
-
-      - name: Grant execute permission for gradlew
+          
+      # 构建 Android 应用
+      - name: Build Android APK
         working-directory: NfcAimeReader.Android
-        run: chmod +x gradlew
-
-      - name: Build with Gradle
-        working-directory: NfcAimeReader.Android
-        run: ./gradlew assembleRelease
-
-      - name: Rename APK
-        working-directory: NfcAimeReader.Android
-        run: mv app/build/outputs/apk/release/app-release.apk ${{ github.workspace }}/NfcAimeReader_v${{ env.VERSION }}.apk
-
-      - name: Calculate APK hash (MD5 and SHA1)
-        id: apk_hash
         run: |
-          echo "MD5=$(md5sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
-          echo "SHA1=$(sha1sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
-
-      # First get the release by tag name
-      - name: Get Release Info
-        id: get_release
-        uses: actions/github-script@v6
+          chmod +x gradlew
+          ./gradlew assembleRelease
+          mv app/build/outputs/apk/release/app-release.apk ${{ github.workspace }}/NfcAimeReader_v${{ env.VERSION }}.apk
+          
+      # 计算 APK 哈希值
+      - name: Calculate APK hash
+        run: |
+          echo "APK_MD5=$(md5sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
+          echo "APK_SHA1=$(sha1sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
+      
+      # 上传 APK 作为 artifact 以便后续作业使用
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const tagName = 'v${{ env.VERSION }}';
-            const releases = await github.rest.repos.listReleases({
-              owner: context.repo.owner,
-              repo: context.repo.repo
-            });
-            
-            const release = releases.data.find(r => r.tag_name === tagName);
-            if (!release) {
-              throw new Error(`Release with tag ${tagName} not found`);
-            }
-            
-            return release.id;
-          result-encoding: string
-
-      - name: Update Release Description
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const releaseId = ${{ steps.get_release.outputs.result }};
-            const version = process.env.VERSION;
-            const md5 = process.env.MD5;
-            const sha1 = process.env.SHA1;
-            const previousTag = process.env.PREVIOUS_TAG;
-
-            const currentRelease = await github.rest.repos.getRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              release_id: releaseId
-            });
-
-            const checksumInfo = `### Checksum
-            | File | NfcAimeReader_v${version}.apk |
-            | ---- | ------------------------------------ |
-            | MD5 | ${md5} |
-            | SHA1 | ${sha1} |
-
-            [View changes on GitHub](https://github.com/ohdj/NfcAimeReader/compare/v${previousTag}...v${version})`;
-
-            await github.rest.repos.updateRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              release_id: releaseId,
-              body: checksumInfo
-            });
-
-      - name: Upload APK
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.prepare-release.outputs.upload_url }}
-          asset_path: ./NfcAimeReader_v${{ env.VERSION }}.apk
-          asset_name: NfcAimeReader_v${{ env.VERSION }}.apk
-          asset_content_type: application/vnd.android.package-archive
-
-  windows-build-dll:
+          name: apk-artifact
+          path: NfcAimeReader_v${{ env.VERSION }}.apk
+          
+  build-dll:
     needs: prepare-release
     runs-on: windows-latest
-
+    outputs:
+      dll_md5: ${{ env.DLL_MD5 }}
+      dll_sha1: ${{ env.DLL_SHA1 }}
+    
     steps:
       - uses: actions/checkout@v4
-
+      
       - name: Set version from prepare job
         shell: pwsh
         run: |
           echo "VERSION=${{ needs.prepare-release.outputs.version }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-
+      
+      # 设置 .NET (用于 DLL 构建)
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '9.0.x'
-
-      - name: Build and Publish .NET Project
+          
+      # 构建 DLL
+      - name: Build .NET DLL
         run: dotnet publish -c Release -r win-x64 -p:Version=${{ env.VERSION }} NfcAimeReaderDLL/NfcAimeReaderDLL.csproj
-
-      - name: Upload DLL to Release Draft
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # 复制并重命名 DLL 文件
+      - name: Rename DLL file
+        shell: pwsh
+        run: |
+          Copy-Item NfcAimeReaderDLL/bin/Release/net9.0/win-x64/publish/NfcAimeReaderDLL.dll -Destination "aimeio_nfcreader_v${{ env.VERSION }}.dll"
+      
+      # 计算 DLL 哈希值
+      - name: Calculate DLL hash
+        shell: pwsh
+        run: |
+          $md5 = (Get-FileHash -Algorithm MD5 "aimeio_nfcreader_v${{ env.VERSION }}.dll").Hash.ToLower()
+          $sha1 = (Get-FileHash -Algorithm SHA1 "aimeio_nfcreader_v${{ env.VERSION }}.dll").Hash.ToLower()
+          echo "DLL_MD5=$md5" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "DLL_SHA1=$sha1" | Out-File -FilePath $env:GITHUB_ENV -Append
+      
+      # 上传重命名后的 DLL 作为 artifact
+      - name: Upload DLL as artifact
+        uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ needs.prepare-release.outputs.upload_url }}
-          asset_path: NfcAimeReaderDLL/bin/Release/net9.0/win-x64/publish/NfcAimeReaderDLL.dll
-          asset_name: aimeio_nfcreader_v${{ env.VERSION }}.dll
-          asset_content_type: application/octet-stream
+          name: dll-artifact
+          path: aimeio_nfcreader_v${{ env.VERSION }}.dll
+
+  create-release:
+    needs: [prepare-release, build-android, build-dll]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set environment variables
+        run: |
+          echo "VERSION=${{ needs.prepare-release.outputs.version }}" >> $GITHUB_ENV
+          echo "PREVIOUS_TAG=${{ needs.prepare-release.outputs.previous_tag }}" >> $GITHUB_ENV
+          echo "APK_MD5=${{ needs.build-android.outputs.apk_md5 }}" >> $GITHUB_ENV
+          echo "APK_SHA1=${{ needs.build-android.outputs.apk_sha1 }}" >> $GITHUB_ENV
+          echo "DLL_MD5=${{ needs.build-dll.outputs.dll_md5 }}" >> $GITHUB_ENV
+          echo "DLL_SHA1=${{ needs.build-dll.outputs.dll_sha1 }}" >> $GITHUB_ENV
+      
+      # 下载构建好的 APK 和 DLL
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: apk-artifact
+          
+      - name: Download DLL artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dll-artifact
+          
+      # 准备发布说明
+      - name: Prepare Release Notes
+        run: |
+          cat > release_notes.md << EOL
+          ### Checksum
+          
+          | File | aimeio_nfcreader_v${{ env.VERSION }}.dll | NfcAimeReader_v${{ env.VERSION }}.apk |
+          | - | - | - |
+          | MD5 | ${{ env.DLL_MD5 }} | ${{ env.APK_MD5 }} |
+          | SHA1 | ${{ env.DLL_SHA1 }} | ${{ env.APK_SHA1 }} |
+          
+          [View changes on GitHub](https://github.com/${{ github.repository }}/compare/v${{ env.PREVIOUS_TAG }}...v${{ env.VERSION }})
+          EOL
+          
+      # 创建发布
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: v${{ env.VERSION }}
+          body_path: release_notes.md
+          draft: true
+          files: |
+            NfcAimeReader_v${{ env.VERSION }}.apk
+            aimeio_nfcreader_v${{ env.VERSION }}.dll
+          token: ${{ secrets.GITHUB_TOKEN }}
