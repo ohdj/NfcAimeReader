@@ -13,18 +13,18 @@ jobs:
       version: ${{ env.VERSION }}
       code: ${{ env.CODE }}
       previous_tag: ${{ env.PREVIOUS_TAG }}
-      
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # 获取完整历史以获取标签
-          
+
       - name: Extract version information
         id: version
         run: |
           echo "CODE=$(jq -r '.code' < .github/release.json)" >> $GITHUB_ENV
           echo "VERSION=$(jq -r '.version' < .github/release.json)" >> $GITHUB_ENV
-          
+
       # 获取上一个 tag
       - name: Get previous tag
         id: previous_tag
@@ -32,7 +32,7 @@ jobs:
           PREV_TAG=$(git tag --sort=-v:refname | grep -v "v${{ env.VERSION }}" | head -n 1 | sed 's/^v//' || echo "0.0.1")
           echo "PREVIOUS_TAG=${PREV_TAG}" >> $GITHUB_ENV
           echo "Found previous tag (without v): ${PREV_TAG}"
-      
+
       # 创建标签
       - name: Create Git Tag
         run: |
@@ -42,20 +42,20 @@ jobs:
             git tag v${{ env.VERSION }}
             git push origin v${{ env.VERSION }}
           fi
-  
+
   build-android:
     needs: prepare-release
     runs-on: ubuntu-latest
     outputs:
       apk_md5: ${{ env.APK_MD5 }}
       apk_sha1: ${{ env.APK_SHA1 }}
-      
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set version from prepare job
         run: echo "VERSION=${{ needs.prepare-release.outputs.version }}" >> $GITHUB_ENV
-      
+
       # 设置 JDK 17 (用于 Android 构建)
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -63,7 +63,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
-          
+
       # 创建 Android 签名文件
       - name: Generate signing.properties
         working-directory: NfcAimeReader.Android
@@ -73,7 +73,7 @@ jobs:
           echo "KEYSTORE_PASSWORD = ${{ secrets.KEYSTORE_PASSWORD }}" >> app/signing.properties
           echo "KEY_ALIAS = ${{ secrets.KEY_ALIAS }}" >> app/signing.properties
           echo "KEY_PASSWORD = ${{ secrets.KEY_PASSWORD }}" >> app/signing.properties
-          
+
       # 构建 Android 应用
       - name: Build Android APK
         working-directory: NfcAimeReader.Android
@@ -81,51 +81,51 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease
           mv app/build/outputs/apk/release/app-release.apk ${{ github.workspace }}/NfcAimeReader_v${{ env.VERSION }}.apk
-          
+
       # 计算 APK 哈希值
       - name: Calculate APK hash
         run: |
           echo "APK_MD5=$(md5sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
           echo "APK_SHA1=$(sha1sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
-      
+
       # 上传 APK 作为 artifact 以便后续作业使用
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
           name: apk-artifact
           path: NfcAimeReader_v${{ env.VERSION }}.apk
-          
+
   build-dll:
     needs: prepare-release
     runs-on: windows-latest
     outputs:
       dll_md5: ${{ env.DLL_MD5 }}
       dll_sha1: ${{ env.DLL_SHA1 }}
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set version from prepare job
         shell: pwsh
         run: |
           echo "VERSION=${{ needs.prepare-release.outputs.version }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-      
+
       # 设置 .NET (用于 DLL 构建)
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '9.0.x'
-          
+
       # 构建 DLL
       - name: Build .NET DLL
         run: dotnet publish -c Release -r win-x64 -p:Version=${{ env.VERSION }} NfcAimeReaderDLL/NfcAimeReaderDLL.csproj
-      
+
       # 复制并重命名 DLL 文件
       - name: Rename DLL file
         shell: pwsh
         run: |
           Copy-Item NfcAimeReaderDLL/bin/Release/net9.0/win-x64/publish/NfcAimeReaderDLL.dll -Destination "aimeio_nfcreader_v${{ env.VERSION }}.dll"
-      
+
       # 计算 DLL 哈希值
       - name: Calculate DLL hash
         shell: pwsh
@@ -134,7 +134,7 @@ jobs:
           $sha1 = (Get-FileHash -Algorithm SHA1 "aimeio_nfcreader_v${{ env.VERSION }}.dll").Hash.ToLower()
           echo "DLL_MD5=$md5" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "DLL_SHA1=$sha1" | Out-File -FilePath $env:GITHUB_ENV -Append
-      
+
       # 上传重命名后的 DLL 作为 artifact
       - name: Upload DLL as artifact
         uses: actions/upload-artifact@v4
@@ -145,10 +145,10 @@ jobs:
   create-release:
     needs: [prepare-release, build-android, build-dll]
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set environment variables
         run: |
           echo "VERSION=${{ needs.prepare-release.outputs.version }}" >> $GITHUB_ENV
@@ -157,45 +157,52 @@ jobs:
           echo "APK_SHA1=${{ needs.build-android.outputs.apk_sha1 }}" >> $GITHUB_ENV
           echo "DLL_MD5=${{ needs.build-dll.outputs.dll_md5 }}" >> $GITHUB_ENV
           echo "DLL_SHA1=${{ needs.build-dll.outputs.dll_sha1 }}" >> $GITHUB_ENV
-      
+
       # 下载构建好的 APK 和 DLL
       - name: Download APK artifact
         uses: actions/download-artifact@v4
         with:
           name: apk-artifact
-          
+
       - name: Download DLL artifact
         uses: actions/download-artifact@v4
         with:
           name: dll-artifact
-          
-      # 准备发布说明
+
+      # 准备 ini 配置并写入多行环境变量
+      - name: Prepare Ini Config Env Var
+        run: |
+          echo 'INI_CONTENT<<EOF' >> $GITHUB_ENV
+          echo '[aime]' >> $GITHUB_ENV
+          echo '; 启用 Segatools 的读卡器 hook，没有此项也不影响，但是不能设置为0' >> $GITHUB_ENV
+          echo 'enable=1' >> $GITHUB_ENV
+          echo '' >> $GITHUB_ENV
+          echo '[aimeio]' >> $GITHUB_ENV
+          echo '; 指定 dll 路径，需要把 dll 复制到游戏 bin 路径下' >> $GITHUB_ENV
+          # 在这里，Actions会替换 VERSION 后写入 GITHUB_ENV
+          echo "path=aimeio_nfcreader_v${{ env.VERSION }}.dll" >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+      # 准备发布说明，引用环境变量
       - name: Prepare Release Notes
         run: |
           cat > release_notes.md << EOL
-          
           ### segatools.ini 配置
-          
-          ```ini
-          [aime]
-          ; 启用 Segatools 的读卡器 hook，没有此项也不影响，但是不能设置为0
-          enable=1
 
-          [aimeio]
-          ; 指定 dll 路径，需要把 dll 复制到游戏bin路径下
-          path=aimeio_nfcreader_v${{ env.VERSION }}.dll
-          ```
+          \`\`\`ini
+          ${{ env.INI_CONTENT }}
+          \`\`\`
 
           ### Checksum
-          
+
           | File | aimeio_nfcreader_v${{ env.VERSION }}.dll | NfcAimeReader_v${{ env.VERSION }}.apk |
           | - | - | - |
           | MD5 | ${{ env.DLL_MD5 }} | ${{ env.APK_MD5 }} |
           | SHA1 | ${{ env.DLL_SHA1 }} | ${{ env.APK_SHA1 }} |
-          
+
           [View changes on GitHub](https://github.com/${{ github.repository }}/compare/v${{ env.PREVIOUS_TAG }}...v${{ env.VERSION }})
           EOL
-          
+
       # 创建发布
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
