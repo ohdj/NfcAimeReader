@@ -54,7 +54,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set version from prepare job
-        run: echo "VERSION=${{ needs.prepare-release.outputs.version }}" >> $GITHUB_ENV
+        run: |
+          echo "VERSION_CODE=${{ needs.prepare-release.outputs.code }}" >> $GITHUB_ENV
+          echo "VERSION_NAME=${{ needs.prepare-release.outputs.version }}" >> $GITHUB_ENV
 
       # 设置 JDK 17 (用于 Android 构建)
       - name: Set up JDK 17
@@ -79,21 +81,21 @@ jobs:
         working-directory: NfcAimeReader.Android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease
-          mv app/build/outputs/apk/release/app-release.apk ${{ github.workspace }}/NfcAimeReader_v${{ env.VERSION }}.apk
+          ./gradlew assembleRelease -PappVersionCode=${{ env.VERSION_CODE }} -PappVersionName=${{ env.VERSION_NAME }}
+          mv app/build/outputs/apk/release/app-release.apk ${{ github.workspace }}/NfcAimeReader_v${{ env.VERSION_NAME }}.apk
 
       # 计算 APK 哈希值
       - name: Calculate APK hash
         run: |
-          echo "APK_MD5=$(md5sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
-          echo "APK_SHA1=$(sha1sum NfcAimeReader_v${{ env.VERSION }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
+          echo "APK_MD5=$(md5sum NfcAimeReader_v${{ env.VERSION_NAME }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
+          echo "APK_SHA1=$(sha1sum NfcAimeReader_v${{ env.VERSION_NAME }}.apk | awk '{ print $1 }')" >> $GITHUB_ENV
 
-      # 上传 APK 作为 artifact 以便后续作业使用
+      # 上传 APK 作为 artifact
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
           name: apk-artifact
-          path: NfcAimeReader_v${{ env.VERSION }}.apk
+          path: NfcAimeReader_v${{ env.VERSION_NAME }}.apk
 
   build-dll:
     needs: prepare-release
