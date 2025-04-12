@@ -43,7 +43,7 @@ jobs:
             git push origin v${{ env.VERSION }}
           fi
 
-  build-android:
+  build-android-apk:
     needs: prepare-release
     runs-on: ubuntu-latest
     outputs:
@@ -97,7 +97,7 @@ jobs:
           name: apk-artifact
           path: NfcAimeReader_v${{ env.VERSION_NAME }}.apk
 
-  build-dll:
+  build-windows-dll:
     needs: prepare-release
     runs-on: windows-latest
     outputs:
@@ -145,7 +145,7 @@ jobs:
           path: aimeio_nfcreader_v${{ env.VERSION }}.dll
 
   create-release:
-    needs: [prepare-release, build-android, build-dll]
+    needs: [prepare-release, build-android-apk, build-windows-dll]
     runs-on: ubuntu-latest
 
     steps:
@@ -155,10 +155,10 @@ jobs:
         run: |
           echo "VERSION=${{ needs.prepare-release.outputs.version }}" >> $GITHUB_ENV
           echo "PREVIOUS_TAG=${{ needs.prepare-release.outputs.previous_tag }}" >> $GITHUB_ENV
-          echo "APK_MD5=${{ needs.build-android.outputs.apk_md5 }}" >> $GITHUB_ENV
-          echo "APK_SHA1=${{ needs.build-android.outputs.apk_sha1 }}" >> $GITHUB_ENV
-          echo "DLL_MD5=${{ needs.build-dll.outputs.dll_md5 }}" >> $GITHUB_ENV
-          echo "DLL_SHA1=${{ needs.build-dll.outputs.dll_sha1 }}" >> $GITHUB_ENV
+          echo "APK_MD5=${{ needs.build-android-apk.outputs.apk_md5 }}" >> $GITHUB_ENV
+          echo "APK_SHA1=${{ needs.build-android-apk.outputs.apk_sha1 }}" >> $GITHUB_ENV
+          echo "DLL_MD5=${{ needs.build-windows-dll.outputs.dll_md5 }}" >> $GITHUB_ENV
+          echo "DLL_SHA1=${{ needs.build-windows-dll.outputs.dll_sha1 }}" >> $GITHUB_ENV
 
       # 下载构建好的 APK 和 DLL
       - name: Download APK artifact
