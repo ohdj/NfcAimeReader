@@ -81,7 +81,7 @@ jobs:
         working-directory: NfcAimeReader.Android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease -PappVersionCode=${{ env.VERSION_CODE }} -PappVersionName=${{ env.VERSION_NAME }}
+          ./gradlew assembleRelease -PversionCode=${{ env.VERSION_CODE }} -PversionName=${{ env.VERSION_NAME }}
           mv app/build/outputs/apk/release/app-release.apk ${{ github.workspace }}/NfcAimeReader_v${{ env.VERSION_NAME }}.apk
 
       # 计算 APK 哈希值
