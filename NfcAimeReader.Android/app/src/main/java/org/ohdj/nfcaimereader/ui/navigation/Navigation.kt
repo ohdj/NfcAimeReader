@@ -52,6 +52,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import org.ohdj.nfcaimereader.BuildConfig
 import org.ohdj.nfcaimereader.R
 import org.ohdj.nfcaimereader.data.datastore.UserPreferenceViewModel
 import org.ohdj.nfcaimereader.ui.screen.home.HomeScreen
@@ -207,7 +208,7 @@ fun AboutDialog(
                     )
 
                     Text(
-                        text = "v0.0.3",
+                        text = "v${BuildConfig.VERSION_NAME}",
                         fontSize = 14.sp
                     )
 
