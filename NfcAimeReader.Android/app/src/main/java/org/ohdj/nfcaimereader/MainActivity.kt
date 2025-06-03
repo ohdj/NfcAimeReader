@@ -15,13 +15,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import org.ohdj.nfcaimereader.data.datastore.UserPreferenceViewModel
 import org.ohdj.nfcaimereader.ui.navigation.Navigation
 import org.ohdj.nfcaimereader.ui.theme.NfcAimeReaderTheme
-import org.ohdj.nfcaimereader.utils.NfcManager
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    @Inject
-    lateinit var nfcManager: NfcManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,11 +57,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        nfcManager.enableNfcReaderMode(this)
     }
 
     override fun onPause() {
         super.onPause()
-        nfcManager.disableNfcReaderMode(this)
     }
 }

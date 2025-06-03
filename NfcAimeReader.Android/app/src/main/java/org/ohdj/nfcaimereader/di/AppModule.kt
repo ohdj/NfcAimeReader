@@ -10,7 +10,6 @@ import org.ohdj.nfcaimereader.data.datastore.WebSocketPreferences
 import org.ohdj.nfcaimereader.data.repository.WebSocketRepository
 import org.ohdj.nfcaimereader.data.websocket.WebSocketClient
 import org.ohdj.nfcaimereader.utils.NetworkScanner
-import org.ohdj.nfcaimereader.utils.NfcManager
 import javax.inject.Singleton
 
 @Module
@@ -43,11 +42,5 @@ object AppModule {
         networkScanner: NetworkScanner
     ): WebSocketRepository {
         return WebSocketRepository(preferences, webSocketClient, networkScanner)
-    }
-
-    @Singleton
-    @Provides
-    fun provideNfcManager(@ApplicationContext context: Context): NfcManager {
-        return NfcManager(context)
     }
 }
