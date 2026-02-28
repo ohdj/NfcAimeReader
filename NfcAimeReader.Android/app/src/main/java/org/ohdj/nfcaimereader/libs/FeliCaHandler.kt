@@ -80,7 +80,7 @@ class FeliCaHandler(private val nfcF: NfcF, private val compatibilityMode: Boole
 
     @SuppressLint("DefaultLocale")
     override fun getAccessCode(): String? {
-        if (compatibilityMode) return String.format("%020d", nfcF.tag.id.fold(0L) { acc, b -> (acc shl 8) or (b.toInt() and 0xFF).toLong() });
+        if (compatibilityMode) return nfcF.tag.id.joinToString (""){ String.format("%02X", it) };
         try {
             nfcF.connect()
             sendPolling()
