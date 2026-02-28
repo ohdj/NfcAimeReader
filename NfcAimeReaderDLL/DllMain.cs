@@ -15,7 +15,7 @@ public static class DllMain
     static DllMain()
     {
         PInvoke.AllocConsole();
-        card = new Card("") ;
+        card = new Card("" ,"") ;
         Server = WebSocketServers.GetWebSocketServer();
     }
 
@@ -56,9 +56,14 @@ public static class DllMain
                         var jsonParams = jsonObj["params"]?.ToString();
                         if (!string.IsNullOrEmpty(jsonParams))
                         {
-                            Console.WriteLine("IDm: " + jsonParams);
-                            card.SetCardIdm(jsonParams);
-
+                            if (jsonParams.Length == 20) {
+                                Console.WriteLine("AccessCode: " + jsonParams);
+                                card.SetCardAccessCode(jsonParams);
+                            }
+                            else {
+                                Console.WriteLine("IDm: " + jsonParams);
+                                card.SetCardIdm(jsonParams);
+                            }
                             // Send success response
                             await socket.Send(JsonConvert.SerializeObject(new { status = true }));
                         }
@@ -115,13 +120,20 @@ public static class DllMain
         {
             return 1;
         }
-        if (card?.IsCardExpired() == true || card?.CardIDm == null)
+        if (card == null || card.IsCardExpired() || card.IsIDmMode)
         {
             return 1;
         }
         //将卡号复制到缓存区以传递给游戏
-        Marshal.Copy(card.CardIDm, 0, luid, (int)luidSize);
-        Console.WriteLine("Successfully copied card IDm to buffer.");
+        Marshal.Copy(card.CardAccessCode, 0, luid, (int)luidSize);
+        Console.WriteLine("Successfully copied card AccessCode to buffer.");
+
+        // Notify connected clients that the card was read
+        WebSocketServers.BroadcastMessage(new
+        {
+            event_type = "card_read",
+            card_id = card.CardAccessCode
+        });
         return 0;
     }
 
@@ -129,7 +141,7 @@ public static class DllMain
     [UnmanagedCallersOnly(EntryPoint = "aime_io_nfc_get_felica_id")]
     public static unsafe int GetFelicaId(byte unitNo, ulong* idm)
     {
-        if (card == null || card.IsCardExpired())
+        if (card == null || card.IsCardExpired() || card.IsIDmMode == false)
         {
             return 1;
         }

@@ -2,13 +2,32 @@ namespace NfcAimeReaderDLL;
 
 public class Card {
     public byte[] CardIDm;
+
+    public byte[] CardAccessCode;
+
+    public bool IsIDmMode = false;
     //过期时间
     public long ExpiredTime;
-    public Card(String IDm) {
+    public Card(String IDm ,String AccessCode) {
         CardIDm = IDmHandle(IDm);
+        CardAccessCode = AccessCodeHandle(AccessCode);
     }
     public void SetCardIdm(String IDm) {
         CardIDm = IDmHandle(IDm);
+        IsIDmMode = true;
+    }
+
+    public void SetCardAccessCode(String accessCode) {
+        CardAccessCode = AccessCodeHandle(accessCode);
+        IsIDmMode = false;
+    }
+
+    //处理AccessCode String->byte[]
+    public byte[] AccessCodeHandle(String accessCode) {
+        ExpiredTime = Environment.TickCount64 + 5000;
+        return (!string.IsNullOrWhiteSpace(accessCode) && accessCode.Length == 20 && accessCode.All(char.IsAsciiHexDigit)
+            ? Convert.FromHexString(accessCode.PadLeft(20, '0'))
+            : null);
     }
 
     //处理IDm String->byte[]
