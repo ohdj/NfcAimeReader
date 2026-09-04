@@ -45,6 +45,7 @@ import org.ohdj.nfcaimereader.ui.screen.about.AboutScreen
 import org.ohdj.nfcaimereader.ui.screen.colorpalette.ColorPaletteScreen
 import org.ohdj.nfcaimereader.ui.screen.connect.ConnectPager
 import org.ohdj.nfcaimereader.ui.screen.home.HomePager
+import org.ohdj.nfcaimereader.ui.screen.install.InstallScreen
 import org.ohdj.nfcaimereader.ui.screen.settings.SettingPager
 import org.ohdj.nfcaimereader.ui.theme.KernelSUTheme
 import org.ohdj.nfcaimereader.ui.theme.LocalColorMode
@@ -123,6 +124,7 @@ class MainActivity : ComponentActivity() {
                                 entry<Route.Main> { mainScreenEntry() }
                                 entry<Route.About> { AboutScreen() }
                                 entry<Route.ColorPalette> { ColorPaletteScreen() }
+                                entry<Route.Install> { InstallScreen() }
                             }
                         )
                     }
@@ -194,7 +196,7 @@ fun MainScreen(
                 ) { page ->
                     val isCurrentPage = page == settledPage
                     when (page) {
-                        0 -> if (isCurrentPage || contentReady) HomePager(bottomInnerPadding)
+                        0 -> if (isCurrentPage || contentReady) HomePager(navController, bottomInnerPadding, isCurrentPage)
                         1 -> if (isCurrentPage || contentReady) ConnectPager(bottomInnerPadding)
                         2 -> if (isCurrentPage || contentReady) SettingPager(navController, bottomInnerPadding)
                     }
