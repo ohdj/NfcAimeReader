@@ -1,3 +1,55 @@
 <resources>
     <string name="app_name">NfcAimeReader</string>
+
+    <!-- Bottom navigation -->
+    <string name="home">Home</string>
+    <string name="connect">Connect</string>
+    <string name="settings">Settings</string>
+
+    <!-- Settings -->
+    <string name="settings_check_update">Check for updates</string>
+    <string name="settings_check_update_summary">Automatically check for updates when opening the app.</string>
+    <string name="settings_ui_mode">UI Style</string>
+    <string name="settings_ui_mode_summary">Choose the interface style.</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_summary">Choose the app theme mode.</string>
+
+    <!-- Theme settings -->
+    <string name="settings_theme_mode_system">Follow system</string>
+    <string name="settings_theme_mode_light">Light</string>
+    <string name="settings_theme_mode_dark">Dark</string>
+    <string name="settings_monet">Enable Monet</string>
+    <string name="settings_key_color">Key color</string>
+    <string name="settings_key_color_default">Default</string>
+    <string name="settings_color_style">Color Style</string>
+    <string name="settings_color_spec">Color Spec</string>
+    <string name="settings_enable_blur">Blur</string>
+    <string name="settings_enable_blur_summary">Enable blur effect for top and bottom bars.</string>
+    <string name="settings_floating_bottom_bar">Floating bottom bar</string>
+    <string name="settings_floating_bottom_bar_summary">Use Apple style floating bottom bar.</string>
+    <string name="settings_enable_glass">Liquid glass</string>
+    <string name="settings_enable_glass_summary">Enable liquid glass effect for floating bottom bar.</string>
+    <string name="settings_enable_predictive_back">Predictive back gesture</string>
+    <string name="settings_enable_predictive_back_summary">Enable predictive back gesture support.</string>
+    <string name="settings_page_scale">Page Scale</string>
+    <string name="settings_page_scale_summary">Adjust the global display scale.</string>
+    <string name="color_red">Red</string>
+    <string name="color_pink">Pink</string>
+    <string name="color_purple">Purple</string>
+    <string name="color_deep_purple">Deep Purple</string>
+    <string name="color_indigo">Indigo</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_cyan">Cyan</string>
+    <string name="color_teal">Teal</string>
+    <string name="color_green">Green</string>
+    <string name="color_yellow">Yellow</string>
+    <string name="color_amber">Amber</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_brown">Brown</string>
+    <string name="color_blue_grey">Blue Grey</string>
+    <string name="color_sakura">Sakura</string>
+
+    <!-- About -->
+    <string name="about">About</string>
+    <string name="about_source_code"><![CDATA[View source code at %1$s]]></string>
 </resources>
