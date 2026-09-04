@@ -18,7 +18,4 @@ sealed interface Route : NavKey, JavaSerializable {
 
     @Serializable
     data object ColorPalette : Route
-
-    @Serializable
-    data object Install : Route
 }

@@ -2,8 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    // No version: AGP's built-in Kotlin already brings the parcelize plugin onto the classpath
-    id("org.jetbrains.kotlin.plugin.parcelize")
 }
 
 android {
