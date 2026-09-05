@@ -74,6 +74,7 @@ import org.ohdj.nfcaimereader.ui.theme.isInDarkTheme
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
+import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
 import top.yukonga.miuix.kmp.blur.highlight.LightPosition
@@ -213,11 +214,14 @@ fun FloatingBottomBar(
     content: @Composable RowScope.((Int) -> Unit) -> Unit
 ) {
     val isInDark = isInDarkTheme()
+    // Liquid-glass effects (blur / lens / highlight) are AGSL RuntimeShader based → Android 13 (API 33)+.
+    // Below that we fall back to the flat, non-blurred bar.
+    val blurEnabled = isBlurEnabled && isRuntimeShaderSupported()
     val pillShape = remember { CircleShape }
     val accentColor = MiuixTheme.colorScheme.primary
     val tabContentColor = MiuixTheme.colorScheme.onSurface
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
-    val containerColor = if (isBlurEnabled) surfaceContainer.copy(0.4f) else surfaceContainer
+    val containerColor = if (blurEnabled) surfaceContainer.copy(0.4f) else surfaceContainer
 
     val tabsBackdrop = rememberLayerBackdrop()
     val density = LocalDensity.current
@@ -353,7 +357,7 @@ fun FloatingBottomBar(
                     ),
                 )
                 .then(
-                    if (isBlurEnabled) {
+                    if (blurEnabled) {
                         Modifier.drawBackdrop(
                             backdrop = backdrop,
                             shape = { pillShape },
@@ -380,7 +384,7 @@ fun FloatingBottomBar(
                     }
                 )
                 .then(
-                    if (isBlurEnabled) {
+                    if (blurEnabled) {
                         interactiveHighlight.modifier.then(interactiveHighlight.gestureModifier)
                     } else Modifier
                 )
@@ -394,7 +398,7 @@ fun FloatingBottomBar(
             }
         }
 
-        if (isBlurEnabled) {
+        if (blurEnabled) {
             CompositionLocalProvider(
                 LocalFloatingBottomBarTabScale provides {
                     lerp(1f, 1.2f, dampedDragAnimation.pressProgress)
@@ -431,7 +435,7 @@ fun FloatingBottomBar(
 
         if (tabWidthPx > 0f) {
             val tabWidthDp = with(density) { tabWidthPx.toDp() }
-            if (isBlurEnabled) {
+            if (blurEnabled) {
                 Box(
                     Modifier
                         .padding(horizontal = 4.dp)
